@@ -6,6 +6,10 @@ venv/
 .env
 .pytest_cache/
 
+# Databases
+backend/data/
+backend/mongo_data/
+
 # Node
 node_modules/
 .npm
