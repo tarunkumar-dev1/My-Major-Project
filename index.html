@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Skill Gap Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-illustration">
+                <i class="ph ph-brain" style="font-size: 120px; color: white; margin-bottom: 2rem;"></i>
+                <h2>Accelerate Your Career</h2>
+                <p>Let AI analyze your skills, build your custom roadmap, and bridge the gap to your dream job.</p>
+            </div>
+            <div class="auth-form-container">
+                <div class="auth-header">
+                    <h1>Welcome Back</h1>
+                    <p>Enter your details to access your dashboard.</p>
+                </div>
+                <!-- Form handled by main.js API integration -->
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="Enter your password"
+                            required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </form>
+                <div class="auth-footer">
+                    Don't have an account? <a href="signup.html">Create account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

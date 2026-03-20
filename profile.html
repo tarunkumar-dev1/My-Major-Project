@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - AI Skill Gap Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .profile-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .settings-card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .settings-card h3 {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .stat-box {
+            background: var(--bg-input);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="ph-fill ph-brain" style="font-size: 28px;"></i>
+                <span>SkillGap AI</span>
+            </div>
+            <nav class="sidebar-nav" style="display: flex; flex-direction: column; height: 100%;">
+                <div style="flex: 1;">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="ph ph-squares-four"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="analyze.html" class="nav-link">
+                        <i class="ph ph-target"></i>
+                        <span>Analyze Skills</span>
+                    </a>
+                    <a href="progress.html" class="nav-link">
+                        <i class="ph ph-chart-line-up"></i>
+                        <span>Progress</span>
+                    </a>
+                    <a href="profile.html" class="nav-link active">
+                        <i class="ph ph-user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="admin.html" class="nav-link">
+                        <i class="ph ph-shield-check"></i>
+                        <span>Admin</span>
+                    </a>
+                </div>
+                <div style="margin-top: auto;">
+                    <button class="nav-link" id="theme-toggle"
+                        style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left;">
+                        <i class="ph ph-moon"></i>
+                        <span>Dark Mode</span>
+                    </button>
+                    <a href="index.html" class="nav-link" style="color: #EF4444; margin-top: 0.5rem;">
+                        <i class="ph ph-sign-out"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-search">
+                    <i class="ph ph-magnifying-glass" style="color: var(--text-muted);"></i>
+                    <input type="text" placeholder="Search settings...">
+                </div>
+                <div class="user-profile">
+                    <button class="btn btn-icon"
+                        style="background: transparent; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; position: relative;">
+                        <i class="ph ph-bell"></i>
+                    </button>
+                    <div class="avatar" id="headerAvatar">--</div>
+                    <div class="user-info" style="display: flex; flex-direction: column;">
+                        <span id="headerName" style="font-weight: 600; font-size: 0.9rem;">Loading...</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Pro Plan</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="dashboard-header" style="margin-bottom: 2rem;">
+                    <div>
+                        <h1>My Profile</h1>
+                        <p style="color: var(--text-secondary);">Manage your personal information and career settings.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Profile Header -->
+                <div class="dashboard-card" style="margin-bottom: 2rem;">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large" id="mainAvatar">--</div>
+                        <div class="profile-info">
+                            <h1 id="profileName">Loading...</h1>
+                            <p><i class="ph ph-envelope-simple"></i> <span id="profileEmail">loading@example.com</span>
+                            </p>
+                            <p><i class="ph ph-briefcase"></i> Target: <span id="profileCareer"
+                                    style="color: var(--primary); font-weight: 600;">Not Set</span></p>
+                        </div>
+                        <div style="margin-left: auto;">
+                            <button id="editProfileBtn" class="btn btn-primary"
+                                style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="ph ph-pencil-simple"></i> Edit Profile
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                        <div class="stat-box">
+                            <div class="stat-number" id="statReadiness">0%</div>
+                            <div class="stat-label">Career Readiness</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="statSkills">0</div>
+                            <div class="stat-label">Acquired Skills</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="statCompleted">0</div>
+                            <div class="stat-label">Courses Completed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- Personal Info Form -->
+                    <div class="settings-card">
+                        <h3><i class="ph-fill ph-identification-card" style="color: var(--primary);"></i> Personal
+                            Information</h3>
+                        <form id="profileForm" onsubmit="event.preventDefault();"
+                            style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="editName" class="form-control" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="editEmail" class="form-control" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Career Direction</label>
+                                <select id="editCareer" class="form-control" disabled>
+                                    <option value="Data Scientist">Data Scientist</option>
+                                    <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+                                    <option value="Frontend Developer">Frontend Developer</option>
+                                    <option value="Backend Developer">Backend Developer</option>
+                                    <option value="Full Stack Developer">Full Stack Developer</option>
+                                    <option value="Product Manager">Product Manager</option>
+                                </select>
+                            </div>
+                            <button type="button" id="saveProfileBtn" class="btn btn-primary"
+                                style="align-self: flex-start; display: none;">Save
+                                Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- Security & Preferences -->
+                    <div style="display: flex; flex-direction: column; gap: 2rem;">
+                        <div class="settings-card">
+                            <h3><i class="ph-fill ph-lock-key" style="color: var(--accent);"></i> Security</h3>
+                            <button class="btn"
+                                style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); width: 100%; margin-bottom: 1rem; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                                Change Password
+                                <i class="ph ph-caret-right"></i>
+                            </button>
+                            <button class="btn"
+                                style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary); width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center;">
+                                Two-Factor Authentication
+                                <span class="tag tag-danger" style="margin-left: auto; margin-right: 1rem;">Off</span>
+                                <i class="ph ph-caret-right"></i>
+                            </button>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3><i class="ph-fill ph-bell-ringing" style="color: #F59E0B;"></i> Preferences</h3>
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--border-color);">
+                                <div>
+                                    <div style="font-weight: 600;">Email Notifications</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Weekly roadmap
+                                        progress reports</div>
+                                </div>
+                                <div
+                                    style="width: 44px; height: 24px; background: var(--primary); border-radius: 12px; position: relative; cursor: pointer;">
+                                    <div
+                                        style="width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 0;">
+                                <div>
+                                    <div style="font-weight: 600;">Public Profile</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">Allow recruiters to
+                                        see readiness</div>
+                                </div>
+                                <div
+                                    style="width: 44px; height: 24px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; position: relative; cursor: pointer;">
+                                    <div
+                                        style="width: 20px; height: 20px; background: var(--text-muted); border-radius: 50%; position: absolute; top: 1px; left: 2px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/main.js"></script>
+    <script>
+        // Profile specific data fetching
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            fetch(`http://localhost:5000/api/student/dashboard`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Unauthorized');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.user) {
+                        const u = data.user;
+                        const initials = u.name.substring(0, 2).toUpperCase();
+
+                        // DOM Updates
+                        document.getElementById('headerAvatar').textContent = initials;
+                        document.getElementById('headerName').textContent = u.name;
+
+                        document.getElementById('mainAvatar').textContent = initials;
+                        document.getElementById('profileName').textContent = u.name;
+                        document.getElementById('profileEmail').textContent = u.email;
+                        document.getElementById('profileCareer').textContent = u.career_goal || 'Not Set';
+
+                        document.getElementById('editName').value = u.name;
+                        document.getElementById('editEmail').value = u.email;
+
+                        // Setup dropdown if matched
+                        const select = document.getElementById('editCareer');
+                        for (let i = 0; i < select.options.length; i++) {
+                            if (select.options[i].text.toLowerCase() === (u.career_goal || '').toLowerCase()) {
+                                select.selectedIndex = i;
+                                break;
+                            }
+                        }
+
+                        // Stats
+                        document.getElementById('statReadiness').textContent = `${u.readiness_score || 0}%`;
+                        document.getElementById('statSkills').textContent = (u.skills || []).length;
+                        document.getElementById('statCompleted').textContent = (u.completed_skills || []).length;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    if (err.message === 'Unauthorized') {
+                        localStorage.removeItem('token');
+                        window.location.href = 'index.html';
+                    }
+                });
+
+            // Handle Edit Mode Toggle
+            const editBtn = document.getElementById('editProfileBtn');
+            const saveBtn = document.getElementById('saveProfileBtn');
+            const nameInput = document.getElementById('editName');
+            const careerInput = document.getElementById('editCareer');
+
+            editBtn.addEventListener('click', () => {
+                nameInput.disabled = false;
+                careerInput.disabled = false;
+
+                nameInput.focus();
+
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'block';
+            });
+
+            // Handle Save Action
+            saveBtn.addEventListener('click', () => {
+                const newName = nameInput.value;
+                const newCareer = careerInput.value;
+
+                saveBtn.textContent = "Saving...";
+                saveBtn.disabled = true;
+
+                fetch(`http://localhost:5000/api/student/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: newName,
+                        career_goal: newCareer
+                    })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            // Success, revert UI to read-only
+                            document.getElementById('profileName').textContent = newName;
+                            document.getElementById('headerName').textContent = newName;
+                            document.getElementById('profileCareer').textContent = newCareer;
+
+                            // Re-initialize avatar if name changed
+                            const initials = newName.substring(0, 2).toUpperCase();
+                            document.getElementById('headerAvatar').textContent = initials;
+                            document.getElementById('mainAvatar').textContent = initials;
+
+                            nameInput.disabled = true;
+                            careerInput.disabled = true;
+
+                            editBtn.style.display = 'flex';
+                            saveBtn.style.display = 'none';
+                        }
+                    })
+                    .catch(err => alert('Failed to update profile.'))
+                    .finally(() => {
+                        saveBtn.textContent = "Save Changes";
+                        saveBtn.disabled = false;
+                    });
+            });
+
+        });
+    </script>
+</body>
+
+</html>

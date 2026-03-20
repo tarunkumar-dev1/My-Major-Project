@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - AI Skill Gap Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="ph-fill ph-brain" style="font-size: 28px;"></i>
+                <span>SkillGap AI</span>
+            </div>
+            <nav class="sidebar-nav" style="display: flex; flex-direction: column; height: 100%;">
+                <div style="flex: 1;">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="ph ph-squares-four"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="analyze.html" class="nav-link">
+                        <i class="ph ph-target"></i>
+                        <span>Analyze Skills</span>
+                    </a>
+                    <a href="progress.html" class="nav-link">
+                        <i class="ph ph-chart-line-up"></i>
+                        <span>Progress</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i class="ph ph-user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="admin.html" class="nav-link active">
+                        <i class="ph ph-shield-check"></i>
+                        <span>Admin</span>
+                    </a>
+                </div>
+                <div style="margin-top: auto;">
+                    <button class="nav-link" id="theme-toggle"
+                        style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left;">
+                        <i class="ph ph-moon"></i>
+                        <span>Dark Mode</span>
+                    </button>
+                    <a href="index.html" class="nav-link" style="color: #EF4444; margin-top: 0.5rem;">
+                        <i class="ph ph-sign-out"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-search">
+                    <i class="ph ph-magnifying-glass" style="color: var(--text-muted);"></i>
+                    <input type="text" placeholder="Search system logs, users...">
+                </div>
+                <div class="user-profile">
+                    <div class="avatar" style="background: var(--text-primary); color: var(--bg-main);">A</div>
+                    <div class="user-info" style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">System Admin</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Superuser</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="dashboard-header">
+                    <div class="welcome-msg">
+                        <h1>Admin Overview ⚡</h1>
+                        <p style="color: var(--text-secondary);">Manage users, oversee career skillset data, and track
+                            platform metrics.</p>
+                    </div>
+                </div>
+
+                <!-- Analytics Metrics -->
+                <div class="grid-4">
+                    <div class="dashboard-card"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                        <i class="ph-fill ph-users"
+                            style="font-size: 2.5rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">12,450</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Total Active Students</span>
+                    </div>
+                    <div class="dashboard-card"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                        <i class="ph-fill ph-briefcase"
+                            style="font-size: 2.5rem; color: var(--accent); margin-bottom: 0.5rem;"></i>
+                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">24</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Career Paths Supported</span>
+                    </div>
+                    <div class="dashboard-card"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                        <i class="ph-fill ph-book-open-text"
+                            style="font-size: 2.5rem; color: #10B981; margin-bottom: 0.5rem;"></i>
+                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">142</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Linked Courses</span>
+                    </div>
+                    <div class="dashboard-card"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                        <i class="ph-fill ph-magic-wand"
+                            style="font-size: 2.5rem; color: #F59E0B; margin-bottom: 0.5rem;"></i>
+                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">45.2K</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Skill Analyses Run</span>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="grid-template-columns: 2fr 1fr;">
+                    <!-- User Table -->
+                    <div class="dashboard-card">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 class="card-title" style="margin-bottom: 0;">Recent Signups</h3>
+                            <button class="btn"
+                                style="padding: 0.4rem 0.8rem; font-size: 0.8rem; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">View
+                                All</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>User Focus</th>
+                                        <th>Target Role</th>
+                                        <th>Readiness</th>
+                                        <th>Status</th>
+                                        <th style="text-align: right;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="user-cell">
+                                                <div class="avatar-sm">EK</div>
+                                                <span>Emma Khan</span>
+                                            </div>
+                                        </td>
+                                        <td>Frontend Dev</td>
+                                        <td><span style="font-weight: 600; color: #10B981;">84%</span></td>
+                                        <td><span class="tag tag-success"
+                                                style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Active</span></td>
+                                        <td style="text-align: right;">
+                                            <button
+                                                style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary);"><i
+                                                    class="ph ph-dots-three" style="font-size: 1.25rem;"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="user-cell">
+                                                <div class="avatar-sm">LJ</div>
+                                                <span>Lucas Jones</span>
+                                            </div>
+                                        </td>
+                                        <td>Data Scientist</td>
+                                        <td><span style="font-weight: 600; color: #EF4444;">32%</span></td>
+                                        <td><span class="tag tag-success"
+                                                style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Active</span></td>
+                                        <td style="text-align: right;">
+                                            <button
+                                                style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary);"><i
+                                                    class="ph ph-dots-three" style="font-size: 1.25rem;"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="user-cell">
+                                                <div class="avatar-sm">SM</div>
+                                                <span>Sarah Meyer</span>
+                                            </div>
+                                        </td>
+                                        <td>ML Engineer</td>
+                                        <td><span style="font-weight: 600; color: #F59E0B;">64%</span></td>
+                                        <td><span class="tag tag-warning"
+                                                style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Idle</span></td>
+                                        <td style="text-align: right;">
+                                            <button
+                                                style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary);"><i
+                                                    class="ph ph-dots-three" style="font-size: 1.25rem;"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Dataset Editor -->
+                    <div class="dashboard-card" style="display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 class="card-title" style="margin-bottom: 0;"><i class="ph-fill ph-database"
+                                    style="color: var(--primary);"></i> Skill Dataset Editor</h3>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Direct JSON
+                            editor for required role skills mapping. Validate before save.</p>
+                        <div
+                            style="background-color: var(--bg-input); padding: 1.5rem; border-radius: var(--radius-sm); font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; color: var(--text-primary); border: 1px solid var(--border-color); flex: 1; overflow-y: auto;">
+                            {<br>
+                            &nbsp;&nbsp;<span style="color: #10B981;">"Machine Learning Engineer"</span>: [<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"Python"</span>, <span
+                                style="color: #F59E0B;">"TensorFlow"</span>, <span
+                                style="color: #F59E0B;">"PyTorch"</span>,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"SQL"</span>, <span
+                                style="color: #F59E0B;">"MLOps"</span>, <span
+                                style="color: #F59E0B;">"Algorithms"</span><br>
+                            &nbsp;&nbsp;],<br>
+                            &nbsp;&nbsp;<span style="color: #10B981;">"Frontend Developer"</span>: [<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"HTML"</span>, <span
+                                style="color: #F59E0B;">"CSS"</span>, <span
+                                style="color: #F59E0B;">"JavaScript"</span>,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"React"</span>, <span
+                                style="color: #F59E0B;">"TypeScript"</span><br>
+                            &nbsp;&nbsp;]<br>
+                            }
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button class="btn"
+                                style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">Cancel</button>
+                            <button class="btn btn-primary" style="flex: 1;">Save JSON</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

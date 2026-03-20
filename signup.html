@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - AI Skill Gap Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-illustration">
+                <i class="ph ph-rocket-launch" style="font-size: 120px; color: white; margin-bottom: 2rem;"></i>
+                <h2>Start Your Journey</h2>
+                <p>Join thousands of students fast-tracking their tech careers with AI-powered coaching.</p>
+            </div>
+            <div class="auth-form-container">
+                <div class="auth-header">
+                    <h1>Create Account</h1>
+                    <p>Tell us about yourself to get started.</p>
+                </div>
+                <!-- Form handled by main.js API integration -->
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" class="form-control" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="career">Target Career Goal</label>
+                        <select id="career" class="form-control" required
+                            style="appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: .65em auto; cursor: pointer;">
+                            <option value="">Select a career direction...</option>
+                            <option value="data-scientist">Data Scientist</option>
+                            <option value="ml-engineer">Machine Learning Engineer</option>
+                            <option value="frontend-dev">Frontend Developer</option>
+                            <option value="backend-dev">Backend Developer</option>
+                            <option value="fullstack-dev">Full Stack Developer</option>
+                            <option value="product-manager">Product Manager</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="Create a password"
+                            required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                </form>
+                <div class="auth-footer">
+                    Already have an account? <a href="index.html">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Skills - AI Skill Gap Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="ph-fill ph-brain" style="font-size: 28px;"></i>
+                <span>SkillGap AI</span>
+            </div>
+            <nav class="sidebar-nav" style="display: flex; flex-direction: column; height: 100%;">
+                <div style="flex: 1;">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="ph ph-squares-four"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="analyze.html" class="nav-link active">
+                        <i class="ph ph-target"></i>
+                        <span>Analyze Skills</span>
+                    </a>
+                    <a href="progress.html" class="nav-link">
+                        <i class="ph ph-chart-line-up"></i>
+                        <span>Progress</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i class="ph ph-user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="admin.html" class="nav-link">
+                        <i class="ph ph-shield-check"></i>
+                        <span>Admin</span>
+                    </a>
+                </div>
+                <div style="margin-top: auto;">
+                    <button class="nav-link" id="theme-toggle"
+                        style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left;">
+                        <i class="ph ph-moon"></i>
+                        <span>Dark Mode</span>
+                    </button>
+                    <a href="index.html" class="nav-link" style="color: #EF4444; margin-top: 0.5rem;">
+                        <i class="ph ph-sign-out"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-search">
+                    <i class="ph ph-magnifying-glass" style="color: var(--text-muted);"></i>
+                    <input type="text" placeholder="Search courses, skills...">
+                </div>
+                <div class="user-profile">
+                    <button class="btn btn-icon"
+                        style="background: transparent; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; position: relative;">
+                        <i class="ph ph-bell"></i>
+                    </button>
+                    <div class="avatar">JD</div>
+                    <div class="user-info" style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">John Doe</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Free Plan</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="dashboard-header">
+                    <div class="welcome-msg">
+                        <h1>Analyze Your Skills 🎯</h1>
+                        <p style="color: var(--text-secondary);">Input your skills and target role to let our AI
+                            generate a personalized roadmap.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card" style="max-width: 800px; margin: 0 auto;">
+                    <form id="analyzeForm">
+                        <div class="form-group" style="margin-bottom: 2rem;">
+                            <label style="font-size: 1.1rem; margin-bottom: 0.75rem;">Step 1: Select Target Career
+                                Goal</label>
+                            <select id="targetCareer" class="form-control"
+                                style="padding: 1rem; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: .65em auto; cursor: pointer;">
+                                <option value="Machine Learning Engineer" selected>Machine Learning Engineer</option>
+                                <option value="Data Scientist">Data Scientist</option>
+                                <option value="Frontend Developer">Frontend Developer</option>
+                                <option value="Backend Developer">Backend Developer</option>
+                                <option value="Full Stack Developer">Full Stack Developer</option>
+                                <option value="Product Manager">Product Manager</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 2.5rem;">
+                            <label style="font-size: 1.1rem; margin-bottom: 0.75rem;">Step 2: Add Your Current
+                                Skills</label>
+                            <div class="skill-input-container" id="skillTagsContainer">
+                                <!-- Tags will be injected here via JS -->
+                                <input type="text" id="skillInput" placeholder="Type a skill and press Enter...">
+                            </div>
+                            <div style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                                <strong>Suggested Skills for ML Engineer:</strong>
+                                <div class="tags-container" style="margin-top: 0.5rem; opacity: 0.8;">
+                                    <span class="tag"
+                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
+                                        TensorFlow</span>
+                                    <span class="tag"
+                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
+                                        PyTorch</span>
+                                    <span class="tag"
+                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
+                                        MLOps</span>
+                                    <span class="tag"
+                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
+                                        Docker</span>
+                                    <span class="tag"
+                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
+                                        pandas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary"
+                            style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                            <i class="ph ph-magic-wand"></i> Analyze & Generate AI Roadmap
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // User Info Population
+            fetch(`http://localhost:5000/api/student/dashboard`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user) {
+                        const initials = data.user.name.substring(0, 2).toUpperCase();
+                        document.querySelector('.avatar').textContent = initials;
+                        document.querySelector('.user-info span:first-child').textContent = data.user.name;
+                    }
+                })
+                .catch(console.error);
+
+            // Tagging Logic
+            const skillInput = document.getElementById('skillInput');
+            const tagsContainer = document.getElementById('skillTagsContainer');
+            let skills = [];
+
+            // Add predefined tags from user previous state if any (Optional enhancement)
+
+            function renderTags() {
+                // Remove all tags except the input
+                const existingTags = tagsContainer.querySelectorAll('.tag');
+                existingTags.forEach(t => t.remove());
+
+                skills.forEach((skill, index) => {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.innerHTML = `${skill} <button type="button" data-index="${index}"><i class="ph ph-x"></i></button>`;
+                    tagsContainer.insertBefore(tag, skillInput);
+                });
+
+                // Attach events to new delete buttons
+                tagsContainer.querySelectorAll('button[data-index]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+                        skills.splice(idx, 1);
+                        renderTags();
+                    });
+                });
+            }
+
+            skillInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = skillInput.value.trim();
+                    if (val && !skills.includes(val)) {
+                        skills.push(val);
+                        skillInput.value = '';
+                        renderTags();
+                    }
+                }
+            });
+
+            // Handle Suggested Skills click
+            document.querySelectorAll('.tags-container .tag').forEach(tag => {
+                tag.addEventListener('click', (e) => {
+                    const text = e.target.textContent.replace('+', '').trim();
+                    if (text && !skills.includes(text)) {
+                        skills.push(text);
+                        renderTags();
+                    }
+                });
+            });
+
+            // Form Submit Logic
+            const analyzeForm = document.getElementById('analyzeForm');
+            analyzeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = analyzeForm.querySelector('button[type="submit"]');
+                const targetCareer = document.getElementById('targetCareer').value;
+
+                if (skills.length === 0) {
+                    alert("Please add at least one current skill.");
+                    return;
+                }
+
+                btn.disabled = true;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i> Generating Roadmap... This may take a minute.';
+
+                try {
+                    const res = await fetch(`http://localhost:5000/api/student/submit-skills`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            career_goal: targetCareer,
+                            skills: skills
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (res.ok) {
+                        alert("AI Roadmap Generated Successfully!");
+                        window.location.href = 'progress.html';
+                    } else {
+                        alert("Error: " + (data.error || "Failed to generate roadmap"));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Network error occurred.");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

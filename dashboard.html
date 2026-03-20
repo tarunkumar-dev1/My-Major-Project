@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AI Skill Gap Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="ph-fill ph-brain" style="font-size: 28px;"></i>
+                <span>SkillGap AI</span>
+            </div>
+            <nav class="sidebar-nav" style="display: flex; flex-direction: column; height: 100%;">
+                <div style="flex: 1;">
+                    <a href="dashboard.html" class="nav-link active">
+                        <i class="ph ph-squares-four"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="analyze.html" class="nav-link">
+                        <i class="ph ph-target"></i>
+                        <span>Analyze Skills</span>
+                    </a>
+                    <a href="progress.html" class="nav-link">
+                        <i class="ph ph-chart-line-up"></i>
+                        <span>Progress</span>
+                    </a>
+                    <a href="#" class="nav-link">
+                        <i class="ph ph-user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="admin.html" class="nav-link">
+                        <i class="ph ph-shield-check"></i>
+                        <span>Admin</span>
+                    </a>
+                </div>
+                <div style="margin-top: auto;">
+                    <button class="nav-link" id="theme-toggle"
+                        style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left;">
+                        <i class="ph ph-moon"></i>
+                        <span>Dark Mode</span>
+                    </button>
+                    <a href="index.html" class="nav-link" style="color: #EF4444; margin-top: 0.5rem;">
+                        <i class="ph ph-sign-out"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-search">
+                    <i class="ph ph-magnifying-glass" style="color: var(--text-muted);"></i>
+                    <input type="text" placeholder="Search courses, skills...">
+                </div>
+                <div class="user-profile">
+                    <button class="btn btn-icon"
+                        style="background: transparent; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; position: relative;">
+                        <i class="ph ph-bell"></i>
+                        <span
+                            style="position: absolute; top: 0; right: 2px; width: 8px; height: 8px; background: #EF4444; border-radius: 50%;"></span>
+                    </button>
+                    <div class="avatar">JD</div>
+                    <div class="user-info" style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">John Doe</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Free Plan</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="dashboard-header">
+                    <div class="welcome-msg">
+                        <h1>Welcome back, John! 👋</h1>
+                        <p style="color: var(--text-secondary);">Here's an overview of your skill progression and career
+                            roadmap.</p>
+                    </div>
+                    <div class="career-badge">
+                        <i class="ph-fill ph-code"></i>
+                        Target: Machine Learning Engineer
+                    </div>
+                </div>
+
+                <!-- Metrics & Gap Summary -->
+                <div class="grid-3" style="grid-template-columns: 2fr 2fr 1.5fr;">
+                    <!-- Current Skills -->
+                    <div class="dashboard-card">
+                        <h3 class="card-title">
+                            <i class="ph-fill ph-check-circle" style="color: #10B981;"></i>
+                            Your Current Skills
+                        </h3>
+                        <div class="tags-container" id="currentSkillsContainer">
+                            <span class="tag" style="background: transparent; border: none;"><i
+                                    class="ph-bold ph-spinner ph-spin"></i> Loading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Missing Skills -->
+                    <div class="dashboard-card">
+                        <h3 class="card-title">
+                            <i class="ph-fill ph-warning-circle" style="color: #EF4444;"></i>
+                            Missing Skills
+                        </h3>
+                        <div class="tags-container" id="missingSkillsContainer" style="margin-bottom: 1rem;">
+                            <!-- Populated dynamically -->
+                            <span class="tag" style="background: transparent; border: none;"><i
+                                    class="ph-bold ph-spinner ph-spin"></i> Loading...</span>
+                        </div>
+                        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Recently
+                            Completed</h4>
+                        <div class="tags-container" id="completedSkillsContainer">
+                            <!-- Populated dynamically -->
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">No completed modules yet.</span>
+                        </div>
+                    </div>
+
+                    <!-- Readiness Score -->
+                    <div class="dashboard-card"
+                        style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <h3 class="card-title" style="margin-bottom: 1.5rem;">Readiness Score</h3>
+                        <div class="circular-progress-container">
+                            <div class="circular-progress">
+                                <span class="progress-value">62%</span>
+                            </div>
+                        </div>
+                        <p
+                            style="text-align: center; margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                            You're almost there! Master 2 key skills to reach 80%.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="grid-template-columns: 1fr 2fr;">
+                    <!-- Roadmap -->
+                    <div class="dashboard-card">
+                        <h3 class="card-title">
+                            <i class="ph-fill ph-map-trifold" style="color: var(--primary);"></i>
+                            Learning Roadmap
+                        </h3>
+                        <div class="roadmap-timeline" id="roadmapTimelineContainer" style="margin-top: 1.5rem;">
+                            <!-- Populated dynamically -->
+                            <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                Analyzing roadmap data... If you haven't generated one yet, please go to Analyze Skills.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Recommendations -->
+                    <div class="dashboard-card">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 class="card-title" style="margin-bottom: 0;">
+                                <i class="ph-fill ph-graduation-cap" style="color: var(--accent);"></i>
+                                Recommended Courses
+                            </h3>
+                            <a href="#" style="font-size: 0.875rem; font-weight: 600;">View all</a>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="course-card">
+                                <div class="course-header">
+                                    <div class="course-icon"
+                                        style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                        <i class="ph-fill ph-brain"></i>
+                                    </div>
+                                    <span class="difficulty-badge diff-advanced">Advanced</span>
+                                </div>
+                                <h4>Deep Learning Specialization</h4>
+                                <p>Master Neural Networks, CNNs, and Sequence Models using TensorFlow.</p>
+                                <button class="btn"
+                                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); margin-top: auto;">Start
+                                    Course</button>
+                            </div>
+
+                            <div class="course-card">
+                                <div class="course-header">
+                                    <div class="course-icon"
+                                        style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: rgba(245, 158, 11, 0.1); color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                        <i class="ph-fill ph-cube"></i>
+                                    </div>
+                                    <span class="difficulty-badge diff-intermediate">Intermediate</span>
+                                </div>
+                                <h4>MLOps Fundamentals</h4>
+                                <p>Learn to wrap models in APIs and deploy them to production servers.</p>
+                                <button class="btn"
+                                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); margin-top: auto;">Start
+                                    Course</button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Chart Mockup -->
+                        <div style="margin-top: 2rem;">
+                            <h3 class="card-title" style="margin-bottom: 1rem;">Skill Acquisition Trend</h3>
+                            <div
+                                style="height: 150px; display: flex; align-items: flex-end; gap: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); position: relative;">
+                                <!-- Simple CSS Bar Chart -->
+                                <div
+                                    style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative;">
+                                    <div
+                                        style="position: absolute; bottom: 45px; font-size: 0.75rem; font-weight: 600;">
+                                        12</div>
+                                    <div
+                                        style="width: 30px; height: 40px; background-color: var(--primary-light); border-radius: 4px 4px 0 0; border: 1px solid var(--primary); transition: height 0.5s;">
+                                    </div>
+                                    <div
+                                        style="position: absolute; bottom: -25px; font-size: 0.75rem; color: var(--text-secondary);">
+                                        Jan</div>
+                                </div>
+                                <div
+                                    style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative;">
+                                    <div
+                                        style="position: absolute; bottom: 65px; font-size: 0.75rem; font-weight: 600;">
+                                        15</div>
+                                    <div
+                                        style="width: 30px; height: 60px; background-color: var(--primary-light); border-radius: 4px 4px 0 0; border: 1px solid var(--primary); transition: height 0.5s;">
+                                    </div>
+                                    <div
+                                        style="position: absolute; bottom: -25px; font-size: 0.75rem; color: var(--text-secondary);">
+                                        Feb</div>
+                                </div>
+                                <div
+                                    style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative;">
+                                    <div
+                                        style="position: absolute; bottom: 85px; font-size: 0.75rem; font-weight: 600;">
+                                        18</div>
+                                    <div
+                                        style="width: 30px; height: 80px; background-color: var(--primary-light); border-radius: 4px 4px 0 0; border: 1px solid var(--primary); transition: height 0.5s;">
+                                    </div>
+                                    <div
+                                        style="position: absolute; bottom: -25px; font-size: 0.75rem; color: var(--text-secondary);">
+                                        Mar</div>
+                                </div>
+                                <div
+                                    style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative;">
+                                    <div
+                                        style="position: absolute; bottom: 105px; font-size: 0.75rem; font-weight: 600;">
+                                        22</div>
+                                    <div
+                                        style="width: 30px; height: 100px; background-color: var(--primary); border-radius: 4px 4px 0 0; box-shadow: 0 0 10px rgba(79, 70, 229, 0.4); transition: height 0.5s;">
+                                    </div>
+                                    <div
+                                        style="position: absolute; bottom: -25px; font-size: 0.75rem; color: var(--text-primary); font-weight: 600;">
+                                        Apr</div>
+                                </div>
+                                <div
+                                    style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; position: relative;">
+                                    <div
+                                        style="width: 30px; height: 130px; background-color: var(--bg-input); border-radius: 4px 4px 0 0; border: 1px dashed var(--border-color); opacity: 0.5;">
+                                    </div>
+                                    <div
+                                        style="position: absolute; bottom: -25px; font-size: 0.75rem; color: var(--text-muted);">
+                                        May</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
