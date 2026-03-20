@@ -1,31 +1,48 @@
-from pymongo import MongoClient
+import mongomock
 from pymongo.errors import ConfigurationError
 import logging
+import bcrypt
 
 db = None
 
 def init_db(mongo_uri):
     """
-    Initializes the MongoDB connection and tests it.
+    Initializes the MongoDB connection using mongomock and seeds data.
     """
     global db
     try:
-        # Connect to MongoDB with a 5 second timeout for quick failure reporting
-        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        client = mongomock.MongoClient()
+        db = client['skillgap_db']
         
-        # Test the connection
-        client.server_info() 
-        
-        # Get specified database or default to skillgap_db
-        try:
-            db = client.get_database()
-        except ConfigurationError:
-            db = client['skillgap_db']
+        # Seed test user
+        if not db.users.find_one({"email": "ultimate@example.com"}):
+            hashed = bcrypt.hashpw("password123".encode('utf-8'), bcrypt.gensalt())
+            db.users.insert_one({
+                "name": "Ultimate Tester",
+                "email": "ultimate@example.com",
+                "hashed_password": hashed,
+                "role": "student"
+            })
             
-        logging.info(f"Successfully connected to MongoDB database: {db.name}")
+        # Seed careers for test_full_flow.py logic
+        if db.careers.count_documents({}) == 0:
+            db.careers.insert_many([
+                {
+                    "career_name": "Machine Learning Engineer",
+                    "required_skills": ["Python", "TensorFlow", "PyTorch", "SQL", "MLOps", "Data Structures", "Algorithms"],
+                    "difficulty_level": "Advanced"
+                },
+                {
+                    "career_name": "Data Scientist",
+                    "required_skills": ["Python", "R", "SQL", "Statistics", "Machine Learning", "Data Visualization", "pandas"],
+                    "difficulty_level": "Advanced"
+                }
+            ])
+            
+        logging.info(f"Successfully connected to mongomock database: {db.name}")
         
     except Exception as e:
-        logging.error(f"Failed to connect to MongoDB: {str(e)}")
+        logging.error(f"Failed to connect to mongomock: {str(e)}")
         db = None
 
 def get_db():

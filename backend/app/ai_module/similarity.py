@@ -78,7 +78,7 @@ class SimilarityEngine:
         missing_skills = []
         
         # 2. AI Semantic similarity for the remaining skills
-        if remaining_required and remaining_user:
+        if self.ai_enabled and remaining_required and remaining_user:
             similarity_results = self.calculate_similarity_matrix(remaining_user, remaining_required)
             
             for result in similarity_results:
@@ -87,7 +87,7 @@ class SimilarityEngine:
                 else:
                     missing_skills.append(result['required_skill'])
         else:
-            # If user had no remaining skills, everything remaining required is missing
+            # If AI is disabled or user had no remaining skills, everything remaining required is missing
             missing_skills = remaining_required
             
         covered_skills = list(exact_matches) + ai_merged_matches

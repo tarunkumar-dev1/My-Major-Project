@@ -12,7 +12,8 @@ class RoadmapService:
         for i, skill in enumerate(missing_skills):
             steps.append({
                 "step_number": i + 1,
-                "title": f"Master {skill}",
+                "target_skill": skill,
+                "module_title": f"Master {skill}",
                 "description": f"Learn the core fundamentals and advanced applications of {skill}.",
                 "modules": [
                     {"level": "Beginner", "title": f"Introduction to {skill}", "status": "pending"},
