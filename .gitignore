@@ -9,6 +9,8 @@ venv/
 # Databases
 backend/data/
 backend/mongo_data/
+mongo.zip
+mongodb_bin/
 
 # Node
 node_modules/

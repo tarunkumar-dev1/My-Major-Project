@@ -365,18 +365,31 @@
                                 const fillLabel = isCompleted ? '100%' : 'In Progress';
                                 const labelColor = isCompleted ? '#10B981' : '#F59E0B';
 
+                                let modulesHtml = '';
+                                if (step.modules && step.modules.length > 0) {
+                                    modulesHtml = '<ul style="margin-top: 0.5rem; padding-left: 1rem; color: var(--text-secondary); font-size: 0.85rem;">';
+                                    step.modules.forEach(m => {
+                                        modulesHtml += `<li style="margin-bottom: 0.25rem;"><strong>${m.level}:</strong> ${m.title}</li>`;
+                                    });
+                                    modulesHtml += '</ul>';
+                                }
+
                                 skillRows.push(`
-                                <div class="skill-progress-item">
-                                    <div class="skill-progress-header">
-                                        <span>${step.target_skill}</span>
-                                        <span style="color: ${labelColor};">${fillLabel}</span>
+                                <div class="skill-progress-item" style="background: var(--bg-input); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 1rem;">
+                                    <div class="skill-progress-header" style="margin-bottom: 0.75rem;">
+                                        <span style="font-weight: 600; font-size: 1.05rem;">${step.target_skill}</span>
+                                        <span style="color: ${labelColor}; font-weight: 600;">${fillLabel}</span>
                                     </div>
-                                    <div class="skill-progress-track">
+                                    <div class="skill-progress-track" style="margin-bottom: 0.75rem;">
                                         <div class="skill-progress-fill ${fillClass}" style="width: ${fillWidth};"></div>
                                     </div>
-                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                    <div style="font-weight: 500; color: var(--primary); margin-bottom: 0.5rem; font-size: 0.95rem;">
                                         ${step.module_title}
                                     </div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; font-style: italic; line-height: 1.4;">
+                                        ${step.description || ''}
+                                    </div>
+                                    ${modulesHtml}
                                 </div>
                             `);
                             });

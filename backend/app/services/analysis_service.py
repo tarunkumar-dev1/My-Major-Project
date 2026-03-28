@@ -36,7 +36,11 @@ class AnalysisService:
         readiness_score = analysis_result["readiness_score"]
         
         # 3. Generate Roadmap
-        roadmap_steps = self.roadmap_service.generate_roadmap_steps(missing_skills)
+        roadmap_steps = self.roadmap_service.generate_roadmap_steps(
+            missing_skills=missing_skills,
+            user_skills=submitted_skills,
+            career_goal=career_goal
+        )
         roadmap = self.roadmap_service.save_user_roadmap(
             user_id=str(user_id),
             missing_skills=missing_skills,
