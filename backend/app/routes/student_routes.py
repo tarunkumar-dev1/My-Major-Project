@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.services.auth_service import token_required
+from app.services.auth_service import token_required, AuthService
 from app.services.analysis_service import AnalysisService
 from app.services.roadmap_service import RoadmapService
 from app.database.connection import get_db
@@ -102,15 +102,25 @@ def update_profile(current_user_id):
     data = request.get_json()
     name = data.get('name')
     career_goal = data.get('career_goal')
+    preferences = data.get('preferences')
+    profile_photo = data.get('profile_photo')
 
     db = get_db()
     users_col = db['users']
 
     update_fields = {}
-    if name:
+    if name is not None and name != '':
         update_fields['name'] = name
-    if career_goal:
+    if career_goal is not None and career_goal != '':
         update_fields['career_goal'] = career_goal
+    if isinstance(preferences, dict):
+        update_fields['preferences'] = {
+            'email_notifications': bool(preferences.get('email_notifications', True)),
+            'public_profile': bool(preferences.get('public_profile', False)),
+            'two_factor_enabled': bool(preferences.get('two_factor_enabled', False)),
+        }
+    if profile_photo is not None:
+        update_fields['profile_photo'] = profile_photo
 
     if not update_fields:
         return jsonify({"message": "No valid fields provided for update"}), 400
@@ -123,4 +133,21 @@ def update_profile(current_user_id):
     if result.matched_count == 0:
         return jsonify({"error": "User not found"}), 404
 
-    return jsonify({"message": "Profile updated successfully"}), 200
+    return jsonify({"message": "Profile updated successfully", "updated": update_fields}), 200
+
+
+@student_bp.route('/profile/password', methods=['PUT'])
+@token_required
+def update_password(current_user_id):
+    """Update the current user's password."""
+    data = request.get_json() or {}
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+
+    auth_service = AuthService()
+    response, status_code = auth_service.change_password(
+        ObjectId(current_user_id),
+        current_password,
+        new_password
+    )
+    return jsonify(response), status_code

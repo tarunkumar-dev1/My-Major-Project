@@ -4,6 +4,26 @@ if (savedTheme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
 }
 
+function isValidGmail(email) {
+    return /^[A-Za-z0-9._%+-]+@gmail\.com$/i.test((email || '').trim());
+}
+
+function isStrongPassword(password) {
+    return typeof password === 'string'
+        && password.length >= 8
+        && /[A-Za-z]/.test(password)
+        && /\d/.test(password)
+        && /[^A-Za-z0-9]/.test(password);
+}
+
+function isAdminPage() {
+    return window.location.pathname.endsWith('admin.html');
+}
+
+function isAdminLoginPage() {
+    return window.location.pathname.endsWith('admin-login.html');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('SkillGap Analyzer UI initialized');
 
@@ -60,6 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const email = emailField ? emailField.value : '';
             const password = passwordField ? passwordField.value : '';
 
+            if (!isValidGmail(email)) {
+                alert('Please enter a valid Gmail address.');
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return;
+            }
+
             try {
                 const res = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
@@ -69,6 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 if (res.ok) {
                     localStorage.setItem('token', data.token);
+                    localStorage.setItem('last_user_token', data.token);
+                    if (email) {
+                        localStorage.setItem('last_user_email', email);
+                    }
                     window.location.href = 'dashboard.html';
                 } else {
                     alert('Login failed: ' + (data.error || 'Invalid credentials'));
@@ -96,17 +127,50 @@ document.addEventListener('DOMContentLoaded', () => {
             const emailField = signupForm.querySelector('#signupEmail') || signupForm.querySelector('#email');
             const passwordField = signupForm.querySelector('#signupPassword') || signupForm.querySelector('#password');
             const careerField = signupForm.querySelector('#signupCareer') || signupForm.querySelector('#career');
+            const photoField = signupForm.querySelector('#profilePhoto');
 
             const name = nameField ? nameField.value : '';
             const email = emailField ? emailField.value : '';
             const password = passwordField ? passwordField.value : '';
             const career_goal = careerField ? careerField.value : '';
+            let profile_photo = null;
+
+            if (!isValidGmail(email)) {
+                alert('Only valid Gmail addresses are allowed.');
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            if (!isStrongPassword(password)) {
+                alert('Password must be at least 8 characters long and include letters, numbers, and symbols.');
+                btn.textContent = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            if (photoField && photoField.files && photoField.files[0]) {
+                const file = photoField.files[0];
+                if (!file.type.startsWith('image/')) {
+                    alert('Please choose an image file for your profile photo.');
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                profile_photo = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error('Failed to read profile photo.'));
+                    reader.readAsDataURL(file);
+                });
+            }
 
             try {
                 const res = await fetch(`${API_BASE}/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, career_goal })
+                    body: JSON.stringify({ name, email, password, career_goal, profile_photo })
                 });
                 const data = await res.json();
                 if (res.ok) {
@@ -121,6 +185,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.textContent = originalText;
                 btn.disabled = false;
             }
+        });
+    }
+
+    // Admin Login Form
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    const userProfileBtn = document.getElementById('userProfileBtn');
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = adminLoginForm.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Verifying...';
+            btn.disabled = true;
+
+            const usernameField = adminLoginForm.querySelector('#adminUsername');
+            const passwordField = adminLoginForm.querySelector('#adminPassword');
+            const username = usernameField ? usernameField.value.trim() : '';
+            const password = passwordField ? passwordField.value : '';
+
+            try {
+                const res = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('admin_token', data.token);
+                    if (data.admin && data.admin.username) {
+                        localStorage.setItem('admin_username', data.admin.username);
+                    }
+                    window.location.href = 'admin.html';
+                } else {
+                    alert('Admin login failed: ' + (data.error || 'Invalid credentials'));
+                }
+            } catch (err) {
+                alert('Network error. Is the backend running?');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+
+    if (userProfileBtn) {
+        userProfileBtn.addEventListener('click', () => {
+            const lastUserToken = localStorage.getItem('last_user_token') || localStorage.getItem('token');
+            if (!lastUserToken) {
+                alert('No previous user profile found. Please log in as a user first.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            localStorage.setItem('token', lastUserToken);
+            window.location.href = 'profile.html';
         });
     }
 
@@ -294,6 +414,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 })
                 .catch(console.error);
+        }
+    }
+
+    // Admin portal protection
+    if (isAdminPage()) {
+        const adminToken = localStorage.getItem('admin_token');
+        if (!adminToken) {
+            window.location.href = 'admin-login.html';
+            return;
+        }
+
+        const adminLogout = document.querySelector('a[data-admin-logout="true"]');
+        if (adminLogout) {
+            adminLogout.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_username');
+                window.location.href = 'admin-login.html';
+            });
+        }
+    }
+
+    if (isAdminLoginPage()) {
+        const adminToken = localStorage.getItem('admin_token');
+        if (adminToken) {
+            window.location.href = 'admin.html';
         }
     }
 

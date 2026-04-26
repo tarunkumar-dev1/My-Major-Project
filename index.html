@@ -26,7 +26,8 @@
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" class="form-control" placeholder="Enter your email" required>
+                        <input type="email" id="loginEmail" class="form-control" placeholder="Enter your Gmail address" required pattern="^[A-Za-z0-9._%+-]+@gmail\\.com$">
+                        <div style="margin-top: 0.35rem; font-size: 0.85rem; color: var(--text-secondary);">Only valid Gmail accounts are allowed.</div>
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
@@ -34,51 +35,8 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Sign In</button>
                 </form>
-
-                <div style="margin: 1.25rem 0; display: flex; align-items: center; gap: 0.75rem; color: var(--text-muted);">
-                    <span style="flex: 1; height: 1px; background: var(--border-color);"></span>
-                    <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;">or</span>
-                    <span style="flex: 1; height: 1px; background: var(--border-color);"></span>
-                </div>
-
-                <div class="auth-header" style="margin-bottom: 1rem;">
-                    <h1 style="font-size: 1.6rem;">Create Account</h1>
-                    <p>Register here first, then log in with the same email and password.</p>
-                </div>
-
-                <!-- Registration Form -->
-                <form id="signupForm">
-                    <div class="form-group">
-                        <label for="signupName">Full Name</label>
-                        <input type="text" id="signupName" class="form-control" placeholder="John Doe" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signupEmail">Email</label>
-                        <input type="email" id="signupEmail" class="form-control" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signupCareer">Target Career Goal</label>
-                        <select id="signupCareer" class="form-control" required>
-                            <option value="">Select a career direction...</option>
-                            <option value="Machine Learning Engineer">Machine Learning Engineer</option>
-                            <option value="Data Scientist">Data Scientist</option>
-                            <option value="Frontend Developer">Frontend Developer</option>
-                            <option value="Backend Developer">Backend Developer</option>
-                            <option value="Full Stack Developer">Full Stack Developer</option>
-                            <option value="DevOps Engineer">DevOps Engineer</option>
-                            <option value="Cloud Architect">Cloud Architect</option>
-                            <option value="Cybersecurity Analyst">Cybersecurity Analyst</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="signupPassword">Password</label>
-                        <input type="password" id="signupPassword" class="form-control" placeholder="Create a password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Register</button>
-                </form>
-
                 <div class="auth-footer">
-                    Need the full registration page? <a href="signup.html">Open signup page</a>
+                    Don't have an account? <a href="signup.html">Create Account</a>
                 </div>
             </div>
         </div>

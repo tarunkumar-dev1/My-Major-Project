@@ -17,7 +17,8 @@ def signup():
         name=data.get('name'),
         email=data.get('email'),
         password=data.get('password'),
-        career_goal=data.get('career_goal') # Optional at signup
+        career_goal=data.get('career_goal'), # Optional at signup
+        profile_photo=data.get('profile_photo')
     )
     
     return jsonify(response), status_code

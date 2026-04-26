@@ -1,68 +1,125 @@
-from flask import Blueprint, request, jsonify
-from app.services.auth_service import token_required
+import datetime
+import jwt
+from functools import wraps
+from flask import Blueprint, request, jsonify, current_app
 from app.database.connection import get_db
 
-# Admin routes might be protected by a simple master token or role middleware in a larger app.
-# For simplicity, we are leaving them open or using token_required.
 admin_bp = Blueprint('admin_bp', __name__)
 
-@admin_bp.route('/add-career', methods=['POST'])
-def add_career():
-    """Add a new career and its required skills dataset."""
-    data = request.get_json()
-    career_name = data.get('career_name')
-    required_skills = data.get('required_skills')
-    difficulty_level = data.get('difficulty_level', 'Intermediate')
-    
-    if not career_name or not isinstance(required_skills, list):
-        return jsonify({"error": "career_name and required_skills array are required"}), 400
-        
-    db = get_db()
-    careers_col = db['careers']
-    
-    # Upsert career
-    career_doc = {
-        "career_name": career_name,
-        "required_skills": required_skills,
-        "difficulty_level": difficulty_level
-    }
-    
-    careers_col.update_one(
-        {"career_name": career_name},
-        {"$set": career_doc},
-        upsert=True
-    )
-    
-    return jsonify({
-        "message": f"Career '{career_name}' added/updated successfully",
-        "career": career_doc
-    }), 201
 
-@admin_bp.route('/users', methods=['GET'])
-def get_all_users():
-    """Retrieve all users stats for the admin dashboard."""
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        auth_header = request.headers.get('Authorization', '')
+        parts = auth_header.split(' ')
+        if len(parts) == 2 and parts[0] == 'Bearer':
+            token = parts[1]
+
+        if not token:
+            return jsonify({'error': 'Admin token is missing'}), 401
+
+        try:
+            payload = jwt.decode(token, current_app.config['JWT_SECRET'], algorithms=['HS256'])
+            if payload.get('role') != 'admin':
+                return jsonify({'error': 'Admin access required'}), 403
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Admin session has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid admin token'}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+@admin_bp.route('/login', methods=['POST'])
+def admin_login():
+    data = request.get_json() or {}
+    username = (data.get('username') or '').strip()
+    password = data.get('password') or ''
+
+    expected_username = current_app.config['ADMIN_USERNAME']
+    expected_password = current_app.config['ADMIN_PASSWORD']
+
+    if username != expected_username or password != expected_password:
+        return jsonify({'error': 'Invalid admin credentials'}), 401
+
+    payload = {
+        'sub': expected_username,
+        'role': 'admin',
+        'iat': datetime.datetime.utcnow(),
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+    }
+    token = jwt.encode(payload, current_app.config['JWT_SECRET'], algorithm='HS256')
+
+    return jsonify({
+        'message': 'Admin login successful',
+        'token': token,
+        'admin': {
+            'username': expected_username,
+            'role': 'admin'
+        }
+    }), 200
+
+
+@admin_bp.route('/dashboard', methods=['GET'])
+@admin_required
+def admin_dashboard():
     db = get_db()
     users_col = db['users']
-    
-    # Project out passwords
-    users_cursor = users_col.find({}, {"hashed_password": 0})
+    careers_col = db['careers']
+    login_events_col = db['login_events']
+
+    users_cursor = users_col.find({}, {'hashed_password': 0})
     users_list = []
-    
-    for u in users_cursor:
-        u['_id'] = str(u['_id'])
-        users_list.append(u)
-        
-    # Example aggregate top careers
-    pipeline = [
-        {"$group": {"_id": "$career_goal", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}}
-    ]
-    career_trends = list(users_col.aggregate(pipeline))
-    
+    total_readiness = 0
+    active_users = 0
+    for user in users_cursor:
+        user['_id'] = str(user['_id'])
+        user['login_count'] = int(user.get('login_count', 0) or 0)
+        user['skills_count'] = len(user.get('skills', []))
+        user['completed_count'] = len(user.get('completed_skills', []))
+        user['readiness_score'] = int(user.get('readiness_score', 0) or 0)
+        user['has_photo'] = bool(user.get('profile_photo'))
+        total_readiness += user['readiness_score']
+        if user['login_count'] > 0:
+            active_users += 1
+        users_list.append(user)
+
+    total_users = len(users_list)
+    avg_readiness = round(total_readiness / total_users, 1) if total_users else 0
+    career_trends = list(users_col.aggregate([
+        {'$group': {'_id': '$career_goal', 'count': {'$sum': 1}}},
+        {'$sort': {'count': -1}}
+    ]))
+    career_trends = [trend for trend in career_trends if trend['_id']]
+
+    stats = {
+        'total_users': total_users,
+        'active_users': active_users,
+        'career_paths': careers_col.count_documents({}),
+        'login_events': login_events_col.count_documents({}),
+        'avg_readiness': avg_readiness,
+        'career_trends': career_trends,
+        'total_completed_skills': sum(user['completed_count'] for user in users_list)
+    }
+
     return jsonify({
-        "total_stats": {
-            "total_users": len(users_list),
-            "career_trends": [trend for trend in career_trends if trend['_id']]
-        },
-        "users": users_list
+        'stats': stats,
+        'users': users_list
     }), 200
+
+
+@admin_bp.route('/users', methods=['GET'])
+@admin_required
+def get_all_users():
+    db = get_db()
+    users_col = db['users']
+    users_cursor = users_col.find({}, {'hashed_password': 0})
+    users_list = []
+    for user in users_cursor:
+        user['_id'] = str(user['_id'])
+        users_list.append(user)
+
+    return jsonify({'users': users_list, 'count': len(users_list)}), 200
