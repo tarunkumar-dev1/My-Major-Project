@@ -71,6 +71,19 @@ class AuthService:
             return {"error": "Invalid email or password"}, 401
             
         token = self.generate_token(user["_id"])
+
+        # Store login activity so sign-in events are tracked in MongoDB.
+        login_events = self.db["login_events"]
+        login_events.insert_one({
+            "user_id": str(user["_id"]),
+            "email": email,
+            "logged_in_at": datetime.datetime.utcnow()
+        })
+        self.users_collection.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"last_login": datetime.datetime.utcnow()}, "$inc": {"login_count": 1}}
+        )
+
         return {
             "message": "Login successful", 
             "token": token,

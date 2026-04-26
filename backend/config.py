@@ -11,4 +11,4 @@ class Config:
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
     
     # Model configuration
-    AI_MODEL_NAME = "models/text-embedding-004"
+    AI_MODEL_NAME = "models/gemini-embedding-001"

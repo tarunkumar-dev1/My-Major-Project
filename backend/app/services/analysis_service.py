@@ -2,6 +2,11 @@ from app.database.connection import get_db
 from app.ai_module.similarity import SimilarityEngine
 from app.services.roadmap_service import RoadmapService
 
+
+def _normalize_field_name(value):
+    """Normalize career field labels to a comparison-safe string."""
+    return " ".join((value or "").replace("-", " ").replace("_", " ").lower().split())
+
 class AnalysisService:
     def __init__(self):
         self.db = get_db()
@@ -9,6 +14,26 @@ class AnalysisService:
         self.careers_collection = self.db['careers']
         self.ai_engine = SimilarityEngine.get_instance()
         self.roadmap_service = RoadmapService()
+
+    def _resolve_career(self, career_goal):
+        """
+        Resolve a career by exact or normalized comparison.
+        Handles values like "data-scientist", "Data Scientist", and casing differences.
+        """
+        normalized_goal = _normalize_field_name(career_goal)
+        careers = list(self.careers_collection.find({}, {"_id": 0}))
+
+        # Fast exact match first.
+        for career in careers:
+            if career.get("career_name") == career_goal:
+                return career
+
+        # Fallback normalized match.
+        for career in careers:
+            if _normalize_field_name(career.get("career_name", "")) == normalized_goal:
+                return career
+
+        return None
 
     def analyze_student_skills(self, user_id, submitted_skills, career_goal):
         """
@@ -20,9 +45,15 @@ class AnalysisService:
         from bson.objectid import ObjectId
         
         # 1. Look up career
-        career = self.careers_collection.find_one({"career_name": career_goal})
+        career = self._resolve_career(career_goal)
         if not career:
-            return {"error": f"Career goal '{career_goal}' not found in database"}, 404
+            available_fields = [c.get("career_name") for c in self.careers_collection.find({}, {"career_name": 1, "_id": 0})]
+            return {
+                "error": f"Career goal '{career_goal}' not found in database",
+                "available_careers": available_fields
+            }, 404
+
+        resolved_career_name = career.get("career_name", career_goal)
             
         required_skills = career.get("required_skills", [])
         
@@ -39,7 +70,7 @@ class AnalysisService:
         roadmap_steps = self.roadmap_service.generate_roadmap_steps(
             missing_skills=missing_skills,
             user_skills=submitted_skills,
-            career_goal=career_goal
+            career_goal=resolved_career_name
         )
         roadmap = self.roadmap_service.save_user_roadmap(
             user_id=str(user_id),
@@ -52,14 +83,14 @@ class AnalysisService:
             {"_id": ObjectId(user_id)},
             {"$set": {
                 "skills": submitted_skills,
-                "career_goal": career_goal,
+                "career_goal": resolved_career_name,
                 "readiness_score": readiness_score
             }}
         )
         
         return {
             "message": "Analysis completed successfully",
-            "career_goal": career_goal,
+            "career_goal": resolved_career_name,
             "readiness_score": readiness_score,
             "covered_skills": analysis_result["covered_skills"],
             "missing_skills": missing_skills,

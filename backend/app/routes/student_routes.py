@@ -47,6 +47,22 @@ def get_dashboard(current_user_id):
         "message": "Dashboard data fetched successfully"
     }), 200
 
+
+@student_bp.route('/careers', methods=['GET'])
+@token_required
+def get_careers(current_user_id):
+    """Returns available careers and their required skills for student-side selection UI."""
+    db = get_db()
+    careers_cursor = db['careers'].find({}, {"_id": 0})
+    careers = list(careers_cursor)
+
+    careers.sort(key=lambda c: (c.get("career_name") or "").lower())
+
+    return jsonify({
+        "careers": careers,
+        "count": len(careers)
+    }), 200
+
 @student_bp.route('/roadmap', methods=['GET'])
 @token_required
 def get_roadmap(current_user_id):

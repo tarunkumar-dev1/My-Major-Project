@@ -55,8 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Loading...';
             btn.disabled = true;
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const emailField = loginForm.querySelector('#loginEmail') || loginForm.querySelector('#email');
+            const passwordField = loginForm.querySelector('#loginPassword') || loginForm.querySelector('#password');
+            const email = emailField ? emailField.value : '';
+            const password = passwordField ? passwordField.value : '';
 
             try {
                 const res = await fetch(`${API_BASE}/auth/login`, {
@@ -90,10 +92,15 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.textContent = 'Loading...';
             btn.disabled = true;
 
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const career_goal = document.getElementById('career').value;
+            const nameField = signupForm.querySelector('#signupName') || signupForm.querySelector('#name');
+            const emailField = signupForm.querySelector('#signupEmail') || signupForm.querySelector('#email');
+            const passwordField = signupForm.querySelector('#signupPassword') || signupForm.querySelector('#password');
+            const careerField = signupForm.querySelector('#signupCareer') || signupForm.querySelector('#career');
+
+            const name = nameField ? nameField.value : '';
+            const email = emailField ? emailField.value : '';
+            const password = passwordField ? passwordField.value : '';
+            const career_goal = careerField ? careerField.value : '';
 
             try {
                 const res = await fetch(`${API_BASE}/auth/signup`, {

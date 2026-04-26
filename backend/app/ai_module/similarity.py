@@ -1,4 +1,5 @@
 import logging
+import threading
 import google.generativeai as genai
 from config import Config
 
@@ -9,6 +10,29 @@ if Config.GEMINI_API_KEY:
 else:
     logging.warning("GEMINI_API_KEY is not set. AI clustering will be disabled.")
     AI_ENABLED = False
+
+def _call_with_timeout(func, timeout=10):
+    """Calls a function with a timeout. Returns None if it times out or fails."""
+    result = [None]
+    error = [None]
+
+    def worker():
+        try:
+            result[0] = func()
+        except Exception as e:
+            error[0] = e
+
+    thread = threading.Thread(target=worker)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout)
+
+    if thread.is_alive():
+        logging.warning(f"Gemini API call timed out after {timeout}s")
+        return None
+    if error[0]:
+        raise error[0]
+    return result[0]
 
 class SimilarityEngine:
     _instance = None
@@ -47,17 +71,32 @@ class SimilarityEngine:
             return []
 
         try:
-            # Generate embeddings
-            user_response = genai.embed_content(
-                model=self.model_name,
-                content=user_skills,
-                task_type="SEMANTIC_SIMILARITY"
+            # Generate embeddings with timeout to prevent hanging on rate limits
+            user_response = _call_with_timeout(
+                lambda: genai.embed_content(
+                    model=self.model_name,
+                    content=user_skills,
+                    task_type="SEMANTIC_SIMILARITY"
+                ),
+                timeout=15
             )
-            req_response = genai.embed_content(
-                model=self.model_name,
-                content=required_skills,
-                task_type="SEMANTIC_SIMILARITY"
+            
+            if user_response is None:
+                logging.warning("Embedding call timed out for user skills. Falling back.")
+                return []
+            
+            req_response = _call_with_timeout(
+                lambda: genai.embed_content(
+                    model=self.model_name,
+                    content=required_skills,
+                    task_type="SEMANTIC_SIMILARITY"
+                ),
+                timeout=15
             )
+            
+            if req_response is None:
+                logging.warning("Embedding call timed out for required skills. Falling back.")
+                return []
             
             user_embeddings = user_response['embedding']
             req_embeddings = req_response['embedding']

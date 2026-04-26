@@ -90,12 +90,7 @@
                                 Goal</label>
                             <select id="targetCareer" class="form-control"
                                 style="padding: 1rem; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2364748B%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: .65em auto; cursor: pointer;">
-                                <option value="Machine Learning Engineer" selected>Machine Learning Engineer</option>
-                                <option value="Data Scientist">Data Scientist</option>
-                                <option value="Frontend Developer">Frontend Developer</option>
-                                <option value="Backend Developer">Backend Developer</option>
-                                <option value="Full Stack Developer">Full Stack Developer</option>
-                                <option value="Product Manager">Product Manager</option>
+                                <option value="">Loading careers...</option>
                             </select>
                         </div>
 
@@ -107,24 +102,10 @@
                                 <input type="text" id="skillInput" placeholder="Type a skill and press Enter...">
                             </div>
                             <div style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
-                                <strong>Suggested Skills for ML Engineer:</strong>
-                                <div class="tags-container" style="margin-top: 0.5rem; opacity: 0.8;">
-                                    <span class="tag"
-                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
-                                        TensorFlow</span>
-                                    <span class="tag"
-                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
-                                        PyTorch</span>
-                                    <span class="tag"
-                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
-                                        MLOps</span>
-                                    <span class="tag"
-                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
-                                        Docker</span>
-                                    <span class="tag"
-                                        style="cursor: pointer; background: transparent; border-color: var(--border-color);">+
-                                        pandas</span>
-                                </div>
+                                <strong id="suggestedTitle">Suggested Skills:</strong>
+                                <div id="languageHintsText" style="margin-top: 0.5rem;"></div>
+                                <div id="suggestedSkillsContainer" class="tags-container"
+                                    style="margin-top: 0.5rem; opacity: 0.8;"></div>
                             </div>
                         </div>
 
@@ -140,23 +121,55 @@
     <script src="js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE = 'http://localhost:5000/api';
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = 'index.html';
                 return;
             }
 
+            const languageHintsByCareer = {
+                "Machine Learning Engineer": ["Python", "SQL"],
+                "Data Scientist": ["Python", "R", "SQL"],
+                "Frontend Developer": ["JavaScript", "TypeScript", "HTML", "CSS"],
+                "Backend Developer": ["Python", "Node.js", "Java", "SQL"],
+                "Full Stack Developer": ["JavaScript", "TypeScript", "Python", "SQL"],
+                "DevOps Engineer": ["Bash", "Python"],
+                "Cloud Architect": ["Python", "Bash"],
+                "Cybersecurity Analyst": ["Python", "Bash"]
+            };
+
+            const commonLanguages = new Set([
+                "Python", "JavaScript", "TypeScript", "Java", "C", "C++", "C#", "Go", "Rust", "R",
+                "PHP", "Ruby", "Swift", "Kotlin", "SQL", "Bash", "PowerShell", "Scala", "Perl"
+            ]);
+
+            const targetCareerSelect = document.getElementById('targetCareer');
+            const suggestedTitle = document.getElementById('suggestedTitle');
+            const languageHintsText = document.getElementById('languageHintsText');
+            const suggestedSkillsContainer = document.getElementById('suggestedSkillsContainer');
+
             // User Info Population
-            fetch(`http://localhost:5000/api/student/dashboard`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.user) {
-                        const initials = data.user.name.substring(0, 2).toUpperCase();
+            Promise.all([
+                fetch(`${API_BASE}/student/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }),
+                fetch(`${API_BASE}/student/careers`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+            ])
+                .then(async ([dashboardRes, careersRes]) => {
+                    const dashboardData = dashboardRes.ok ? await dashboardRes.json() : null;
+                    const careersData = careersRes.ok ? await careersRes.json() : null;
+
+                    if (dashboardData && dashboardData.user) {
+                        const initials = dashboardData.user.name.substring(0, 2).toUpperCase();
                         document.querySelector('.avatar').textContent = initials;
-                        document.querySelector('.user-info span:first-child').textContent = data.user.name;
+                        document.querySelector('.user-info span:first-child').textContent = dashboardData.user.name;
                     }
+
+                    const careers = (careersData && careersData.careers) ? careersData.careers : [];
+                    populateCareerDropdown(careers);
                 })
                 .catch(console.error);
 
@@ -164,6 +177,7 @@
             const skillInput = document.getElementById('skillInput');
             const tagsContainer = document.getElementById('skillTagsContainer');
             let skills = [];
+            let careersMap = {};
 
             // Add predefined tags from user previous state if any (Optional enhancement)
 
@@ -189,6 +203,76 @@
                 });
             }
 
+            function getLanguageSuggestions(careerName, requiredSkills) {
+                const normalizedRequired = (requiredSkills || []).map(s => (s || '').trim());
+                const fromSkills = normalizedRequired.filter(skill => commonLanguages.has(skill));
+                const fromCareerHints = languageHintsByCareer[careerName] || [];
+
+                return [...new Set([...fromCareerHints, ...fromSkills])];
+            }
+
+            function renderSuggestionsForCareer(careerName) {
+                const careerData = careersMap[careerName] || { required_skills: [] };
+                const requiredSkills = careerData.required_skills || [];
+                const languageSuggestions = getLanguageSuggestions(careerName, requiredSkills);
+
+                suggestedTitle.textContent = `Suggested Skills for ${careerName}:`;
+
+                if (languageSuggestions.length > 0) {
+                    languageHintsText.innerHTML = `<span style="font-weight: 600; color: var(--text-primary);">Recommended Languages:</span> ${languageSuggestions.join(', ')}`;
+                } else {
+                    languageHintsText.innerHTML = '<span style="color: var(--text-muted);">No language hints available for this field.</span>';
+                }
+
+                suggestedSkillsContainer.innerHTML = '';
+                requiredSkills.slice(0, 10).forEach(skill => {
+                    const tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.style.cursor = 'pointer';
+                    tag.style.background = 'transparent';
+                    tag.style.borderColor = 'var(--border-color)';
+                    tag.textContent = `+ ${skill}`;
+                    tag.addEventListener('click', () => {
+                        if (skill && !skills.includes(skill)) {
+                            skills.push(skill);
+                            renderTags();
+                        }
+                    });
+                    suggestedSkillsContainer.appendChild(tag);
+                });
+
+                if (requiredSkills.length === 0) {
+                    suggestedSkillsContainer.innerHTML = '<span style="color: var(--text-muted);">No suggested skills available.</span>';
+                }
+            }
+
+            function populateCareerDropdown(careers) {
+                targetCareerSelect.innerHTML = '';
+                careersMap = {};
+
+                if (!careers || careers.length === 0) {
+                    targetCareerSelect.innerHTML = '<option value="Machine Learning Engineer">Machine Learning Engineer</option>';
+                    careersMap['Machine Learning Engineer'] = { required_skills: ["Python", "TensorFlow", "PyTorch"] };
+                    renderSuggestionsForCareer('Machine Learning Engineer');
+                    return;
+                }
+
+                careers.forEach((career, index) => {
+                    const name = career.career_name;
+                    careersMap[name] = career;
+
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    if (index === 0) {
+                        option.selected = true;
+                    }
+                    targetCareerSelect.appendChild(option);
+                });
+
+                renderSuggestionsForCareer(targetCareerSelect.value);
+            }
+
             skillInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -201,15 +285,8 @@
                 }
             });
 
-            // Handle Suggested Skills click
-            document.querySelectorAll('.tags-container .tag').forEach(tag => {
-                tag.addEventListener('click', (e) => {
-                    const text = e.target.textContent.replace('+', '').trim();
-                    if (text && !skills.includes(text)) {
-                        skills.push(text);
-                        renderTags();
-                    }
-                });
+            targetCareerSelect.addEventListener('change', () => {
+                renderSuggestionsForCareer(targetCareerSelect.value);
             });
 
             // Form Submit Logic
@@ -229,7 +306,7 @@
                 btn.innerHTML = '<i class="ph-bold ph-spinner ph-spin"></i> Generating Roadmap... This may take a minute.';
 
                 try {
-                    const res = await fetch(`http://localhost:5000/api/student/submit-skills`, {
+                    const res = await fetch(`${API_BASE}/student/submit-skills`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,

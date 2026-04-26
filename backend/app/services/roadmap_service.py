@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import threading
 import google.generativeai as genai
 from config import Config
 from app.database.connection import get_db
@@ -11,8 +12,31 @@ class RoadmapService:
         self.roadmaps_collection = self.db['roadmaps']
         self.ai_enabled = bool(Config.GEMINI_API_KEY)
         if self.ai_enabled:
-            # We use gemini-1.5-flash for fast text generation
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            # We use gemini-2.0-flash-lite for fast text generation
+            self.model = genai.GenerativeModel('gemini-2.0-flash-lite')
+
+    def _generate_with_timeout(self, prompt, timeout=20):
+        """Calls generate_content with a timeout to prevent hanging on rate limits."""
+        result = [None]
+        error = [None]
+
+        def worker():
+            try:
+                result[0] = self.model.generate_content(prompt)
+            except Exception as e:
+                error[0] = e
+
+        thread = threading.Thread(target=worker)
+        thread.daemon = True
+        thread.start()
+        thread.join(timeout)
+
+        if thread.is_alive():
+            logging.warning(f"LLM generate_content timed out after {timeout}s")
+            return None
+        if error[0]:
+            raise error[0]
+        return result[0]
 
     def generate_roadmap_steps(self, missing_skills, user_skills, career_goal):
         """Generates a structured learning sequence using Gemini LLM."""
@@ -41,16 +65,20 @@ class RoadmapService:
                 "description": "<A thorough, personalized sentence explaining why and how to learn this.>",
                 "status": "pending",
                 "modules": [
-                    {{"level": "Beginner", "title": "<specific module name>", "status": "pending"}},
-                    {{"level": "Intermediate", "title": "<specific module name>", "status": "pending"}},
-                    {{"level": "Advanced", "title": "<specific module name>", "status": "pending"}}
+                    {{"level": "Beginner", "title": "<specific module name>", "status": "pending", "youtube_search_url": "https://www.youtube.com/results?search_query=<specific module name>+tutorial"}},
+                    {{"level": "Intermediate", "title": "<specific module name>", "status": "pending", "youtube_search_url": "https://www.youtube.com/results?search_query=<specific module name>+tutorial"}},
+                    {{"level": "Advanced", "title": "<specific module name>", "status": "pending", "youtube_search_url": "https://www.youtube.com/results?search_query=<specific module name>+tutorial"}}
                 ]
             }}
         ]
         """
         
         try:
-            response = self.model.generate_content(prompt)
+            response = self._generate_with_timeout(prompt, timeout=20)
+            if response is None:
+                logging.warning("LLM call timed out. Falling back to template.")
+                return self._generate_fallback_steps(missing_skills)
+
             json_text = response.text.strip()
             # Clean up markdown if the LLM still returns it
             if json_text.startswith("```"):
@@ -79,9 +107,9 @@ class RoadmapService:
                 "description": f"Learn the core fundamentals and advanced applications of {skill}.",
                 "status": "pending",
                 "modules": [
-                    {"level": "Beginner", "title": f"Introduction to {skill}", "status": "pending"},
-                    {"level": "Intermediate", "title": f"Intermediate {skill} Patterns", "status": "pending"},
-                    {"level": "Advanced", "title": f"Advanced {skill} Building", "status": "pending"}
+                    {"level": "Beginner", "title": f"Introduction to {skill}", "status": "pending", "youtube_search_url": f"https://www.youtube.com/results?search_query={skill}+beginner+tutorial"},
+                    {"level": "Intermediate", "title": f"Intermediate {skill} Patterns", "status": "pending", "youtube_search_url": f"https://www.youtube.com/results?search_query={skill}+intermediate+tutorial"},
+                    {"level": "Advanced", "title": f"Advanced {skill} Building", "status": "pending", "youtube_search_url": f"https://www.youtube.com/results?search_query={skill}+advanced+tutorial"}
                 ]
             })
         return steps
