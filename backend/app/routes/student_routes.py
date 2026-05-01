@@ -105,9 +105,10 @@ def get_roadmap(current_user_id):
 def mark_skill_completed(current_user_id):
     """Mark a roadmap skill/module as completed for the current user.
 
-    This implementation stores completed skill names in the user's
-    `completed_skills` array. In a future refinement this could update nested
-    module state within the roadmap document.
+    This implementation:
+    1. Stores completed skill names in the user's `completed_skills` array
+    2. Recalculates the readiness_score based on completed + current skills
+    3. Updates the user record with the new readiness score
     """
     data = request.get_json() or {}
     skill_name = data.get('skill')
@@ -116,13 +117,46 @@ def mark_skill_completed(current_user_id):
         return jsonify({"error": "Skill name is required"}), 400
 
     db = get_db()
-    # Using $addToSet prevents duplicates in the completed_skills array
-    db['users'].update_one(
+    users_col = db['users']
+    careers_col = db['careers']
+    
+    # Mark skill as completed
+    users_col.update_one(
         {"_id": ObjectId(current_user_id)},
         {"$addToSet": {"completed_skills": skill_name}}
     )
+    
+    # Fetch updated user to get career goal
+    user = users_col.find_one({"_id": ObjectId(current_user_id)})
+    if not user or not user.get('career_goal'):
+        return jsonify({"message": f"Successfully marked {skill_name} as completed."}), 200
+    
+    # Get required skills for the career
+    career = careers_col.find_one({"career_name": user.get('career_goal')})
+    if not career:
+        return jsonify({"message": f"Successfully marked {skill_name} as completed."}), 200
+    
+    required_skills = career.get('required_skills', [])
+    completed_skills = user.get('completed_skills', []) + [skill_name]
+    current_skills = user.get('skills', [])
+    
+    # Calculate new readiness score
+    all_covered = list(set(completed_skills + current_skills))
+    new_readiness = 0
+    if required_skills:
+        new_readiness = int((len(all_covered) / len(required_skills)) * 100)
+        new_readiness = min(100, new_readiness)  # Cap at 100%
+    
+    # Update readiness score in database
+    users_col.update_one(
+        {"_id": ObjectId(current_user_id)},
+        {"$set": {"readiness_score": new_readiness}}
+    )
 
-    return jsonify({"message": f"Successfully marked {skill_name} as completed."}), 200
+    return jsonify({
+        "message": f"Successfully marked {skill_name} as completed.",
+        "new_readiness_score": new_readiness
+    }), 200
 
 
 @student_bp.route('/profile', methods=['PUT'])

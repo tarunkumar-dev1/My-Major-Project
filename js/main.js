@@ -313,38 +313,26 @@ document.addEventListener('DOMContentLoaded', () => {
             // Not logged in, kick out to login page
             window.location.href = 'index.html';
         } else {
-            // Fetch Dashboard Data and Roadmap
-            Promise.all([
-                fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_BASE}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
-            ])
-                .then(async ([dashRes, roadRes]) => {
+            // Function to refresh dashboard data in real-time
+            async function refreshDashboardData() {
+                try {
+                    const [dashRes, roadRes] = await Promise.all([
+                        fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${API_BASE}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
+                    ]);
+
                     if (!dashRes.ok) {
                         localStorage.removeItem('token');
                         window.location.href = 'index.html';
                         throw new Error('Unauthorized');
                     }
+
                     const data = await dashRes.json();
                     const roadData = roadRes.ok ? await roadRes.json() : null;
 
                     if (data.user) {
                         const u = data.user;
-                        // Update Welcome Message
-                        const fname = u.name.split(' ')[0];
-                        const welcomeMsg = document.querySelector('.welcome-msg h1');
-                        if (welcomeMsg) welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
-
-                        // Update Top Right Avatar
-                        const avatar = document.querySelector('.avatar');
-                        if (avatar) avatar.textContent = u.name.substring(0, 2).toUpperCase();
-                        const userInfoName = document.querySelector('.user-info span:first-child');
-                        if (userInfoName) userInfoName.textContent = u.name;
-
-                        // Update Target Career
-                        const careerBadge = document.querySelector('.career-badge');
-                        if (careerBadge) careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || 'Not set'}`;
-
-                        // Update Readiness Score
+                        // Update Readiness Score (Real-time)
                         const rs = u.readiness_score || 0;
                         const readinessSpan = document.querySelector('.progress-value');
                         if (readinessSpan) readinessSpan.textContent = `${rs}%`;
@@ -353,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             progressCircle.style.background = `conic-gradient(var(--primary) ${rs * 3.6}deg, var(--bg-card) 0deg)`;
                         }
 
-                        // Populate Current Skills
+                        // Update Current Skills
                         const currentContainer = document.getElementById('currentSkillsContainer');
                         if (currentContainer) {
                             currentContainer.innerHTML = '';
@@ -366,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
 
-                        // Populate Completed Skills
+                        // Update Completed Skills
                         const completedContainer = document.getElementById('completedSkillsContainer');
                         if (completedContainer) {
                             completedContainer.innerHTML = '';
@@ -379,14 +367,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
 
-                        // Populate Missing Skills & Roadmap
+                        // Update Missing Skills & Roadmap
                         const missingContainer = document.getElementById('missingSkillsContainer');
                         const roadmapContainer = document.getElementById('roadmapTimelineContainer');
 
                         if (roadData && roadData.roadmap && roadData.roadmap.generated_steps) {
                             const steps = roadData.roadmap.generated_steps;
 
-                            // Map missing skills based on roadmap targeted skills not in completed or skills
                             if (missingContainer) {
                                 missingContainer.innerHTML = '';
                                 const allKnown = [...(u.skills || []), ...(u.completed_skills || [])];
@@ -409,12 +396,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 roadmapContainer.innerHTML = '';
                                 steps.forEach((step, index) => {
                                     const isCompleted = (u.completed_skills || []).includes(step.target_skill);
-
-                                    // Determine styling
                                     const itemClass = isCompleted ? 'timeline-item completed' : 'timeline-item';
                                     const titleColor = isCompleted ? '' : 'color: var(--primary);';
 
-                                    // Action Button
                                     let actionHtml = '';
                                     if (!isCompleted) {
                                         actionHtml = `<button class="btn btn-primary start-module-btn" data-skill="${step.target_skill}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-top: 0.5rem;">Mark as Completed</button>`;
@@ -429,10 +413,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                     `;
                                 });
 
-                                // Attach events to completion buttons
+                                // Re-attach events to completion buttons
                                 document.querySelectorAll('.start-module-btn').forEach(btn => {
                                     btn.addEventListener('click', async (e) => {
                                         const skillName = e.target.getAttribute('data-skill');
+                                        const originalText = e.target.textContent;
                                         e.target.disabled = true;
                                         e.target.textContent = 'Saving...';
 
@@ -446,14 +431,56 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 body: JSON.stringify({ skill: skillName })
                                             });
                                             if (res.ok) {
-                                                window.location.reload();
+                                                const response = await res.json();
+                                                
+                                                // Show immediate success feedback
+                                                e.target.textContent = '✓ Completed!';
+                                                e.target.style.backgroundColor = 'var(--success)';
+                                                e.target.style.color = 'white';
+                                                
+                                                // Add pulse animation to readiness score
+                                                const readinessSpan = document.querySelector('.progress-value');
+                                                if (readinessSpan) {
+                                                    readinessSpan.style.animation = 'pulse 0.6s ease-out';
+                                                }
+                                                
+                                                // Refresh data immediately
+                                                setTimeout(async () => {
+                                                    await refreshDashboardData();
+                                                    
+                                                    // Show success message
+                                                    if (response.new_readiness_score !== undefined) {
+                                                        const notification = document.createElement('div');
+                                                        notification.textContent = `✓ Skill completed! Readiness: ${response.new_readiness_score}%`;
+                                                        notification.style.cssText = `
+                                                            position: fixed;
+                                                            top: 20px;
+                                                            right: 20px;
+                                                            background: var(--success);
+                                                            color: white;
+                                                            padding: 1rem 1.5rem;
+                                                            border-radius: 0.5rem;
+                                                            z-index: 1000;
+                                                            font-weight: 600;
+                                                            animation: slideIn 0.3s ease-out;
+                                                        `;
+                                                        document.body.appendChild(notification);
+                                                        
+                                                        setTimeout(() => {
+                                                            notification.style.animation = 'slideOut 0.3s ease-out forwards';
+                                                            setTimeout(() => notification.remove(), 300);
+                                                        }, 2000);
+                                                    }
+                                                }, 200);
                                             } else {
                                                 alert("Failed to mark completed.");
                                                 e.target.disabled = false;
-                                                e.target.textContent = 'Mark as Completed';
+                                                e.target.textContent = originalText;
                                             }
                                         } catch (err) {
                                             console.error(err);
+                                            e.target.disabled = false;
+                                            e.target.textContent = originalText;
                                         }
                                     });
                                 });
@@ -462,8 +489,36 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (missingContainer) missingContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No analysis complete.</span>';
                             if (roadmapContainer) roadmapContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">No active roadmap. Go to Analyze Skills.</div>';
                         }
+                    }
+                } catch (error) {
+                    console.error('Error refreshing dashboard:', error);
+                }
+            }
 
-                        // Attach Logout Handler on Dashboard
+            // Initial load and auto-refresh every 3 seconds
+            refreshDashboardData();
+            setInterval(refreshDashboardData, 3000);
+
+            // One-time setup for static UI elements and event handlers
+            fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user) {
+                        const u = data.user;
+                        // Set initial static info (only needed once)
+                        const fname = u.name.split(' ')[0];
+                        const welcomeMsg = document.querySelector('.welcome-msg h1');
+                        if (welcomeMsg) welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
+
+                        const avatar = document.querySelector('.avatar');
+                        if (avatar) avatar.textContent = u.name.substring(0, 2).toUpperCase();
+                        const userInfoName = document.querySelector('.user-info span:first-child');
+                        if (userInfoName) userInfoName.textContent = u.name;
+
+                        const careerBadge = document.querySelector('.career-badge');
+                        if (careerBadge) careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || 'Not set'}`;
+
+                        // Attach Logout Handler
                         const logoutBtn = document.querySelector('a[href="index.html"]');
                         if (logoutBtn && logoutBtn.textContent.includes('Logout')) {
                             logoutBtn.addEventListener('click', (e) => {
@@ -473,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                         }
 
-                        // Make both recommended course cards interactive.
+                        // Make course cards interactive (one-time setup)
                         document.querySelectorAll('.course-card').forEach((card) => {
                             card.style.cursor = 'pointer';
                             card.setAttribute('role', 'button');
