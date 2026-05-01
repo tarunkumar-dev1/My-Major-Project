@@ -1,3 +1,12 @@
+"""
+Authentication helpers and user account management service.
+
+This module encapsulates common authentication primitives (password hashing,
+JWT issuance/verification) and user lifecycle operations such as registration
+and login. Routes import `AuthService` for high-level operations and use the
+`token_required` decorator to protect endpoints.
+"""
+
 import jwt
 import bcrypt
 import datetime
@@ -6,13 +15,20 @@ from functools import wraps
 from flask import request, jsonify, current_app
 from app.database.connection import get_db
 
+
 class AuthService:
+    """Service exposing registration, login and account management helpers."""
+
     def __init__(self):
         self.db = get_db()
         self.users_collection = self.db['users']
 
     def generate_token(self, user_id):
-        """Generates a JWT token valid for 24 hours."""
+        """Generate a JWT token valid for 24 hours.
+
+        The token's `sub` claim contains the `user_id` and can be used by the
+        `token_required` decorator to identify the current user.
+        """
         try:
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
@@ -24,18 +40,18 @@ class AuthService:
             raise Exception(f"Error generating token: {str(e)}")
 
     def hash_password(self, password):
-        """Hashes a password using bcrypt."""
+        """Create a bcrypt salted hash for `password`."""
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode('utf-8'), salt)
 
     def is_valid_gmail(self, email):
-        """Accepts only valid Gmail addresses."""
+        """Validate the email is a Gmail address. Returns boolean."""
         if not email:
             return False
         return bool(re.fullmatch(r'[A-Za-z0-9._%+-]+@gmail\.com', email.strip(), re.IGNORECASE))
 
     def is_strong_password(self, password):
-        """Requires letters, numbers, symbols, and a minimum length."""
+        """Enforce a minimal password strength policy used at registration."""
         if not password or len(password) < 8:
             return False
         has_letter = re.search(r'[A-Za-z]', password)
@@ -44,11 +60,14 @@ class AuthService:
         return bool(has_letter and has_digit and has_symbol)
 
     def verify_password(self, password, hashed_password):
-        """Verifies a password against a hash."""
+        """Verify a plaintext password against a stored bcrypt hash."""
         return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
     def register_user(self, name, email, password, career_goal=None, profile_photo=None):
-        """Registers a new user after checking for duplicates."""
+        """Register a new user with basic validation and return token.
+
+        Returns `(payload, status_code)` to be returned directly by routes.
+        """
         if not self.is_valid_gmail(email):
             return {"error": "Only valid Gmail addresses are allowed"}, 400
 
@@ -58,9 +77,9 @@ class AuthService:
         existing_user = self.users_collection.find_one({"email": email})
         if existing_user:
             return {"error": "Email already exists"}, 400
-            
+
         hashed_password = self.hash_password(password)
-        
+
         new_user = {
             "name": name,
             "email": email,
@@ -77,12 +96,12 @@ class AuthService:
             "profile_photo": profile_photo,
             "created_at": datetime.datetime.utcnow()
         }
-        
+
         result = self.users_collection.insert_one(new_user)
         token = self.generate_token(result.inserted_id)
-        
+
         return {
-            "message": "User registered successfully", 
+            "message": "User registered successfully",
             "token": token,
             "user": {
                 "id": str(result.inserted_id),
@@ -92,18 +111,18 @@ class AuthService:
         }, 201
 
     def login_user(self, email, password):
-        """Authenticates a user and returns a token."""
+        """Authenticate a user and return a fresh JWT on success."""
         if not self.is_valid_gmail(email):
             return {"error": "Only valid Gmail addresses are allowed"}, 400
 
         user = self.users_collection.find_one({"email": email})
-        
+
         if not user or not self.verify_password(password, user["hashed_password"]):
             return {"error": "Invalid email or password"}, 401
-            
+
         token = self.generate_token(user["_id"])
 
-        # Store login activity so sign-in events are tracked in MongoDB.
+        # Store login activity for admin analytics and update user counters.
         login_events = self.db["login_events"]
         login_events.insert_one({
             "user_id": str(user["_id"]),
@@ -116,7 +135,7 @@ class AuthService:
         )
 
         return {
-            "message": "Login successful", 
+            "message": "Login successful",
             "token": token,
             "user": {
                 "id": str(user["_id"]),
@@ -126,7 +145,11 @@ class AuthService:
         }, 200
 
     def change_password(self, user_id, current_password, new_password):
-        """Changes a user's password after verifying the current password."""
+        """Change a user's password after validating the current password.
+
+        Note: `user_id` is expected to be the internal `_id` value used by
+        MongoDB. Routes should pass `ObjectId(...)` where appropriate.
+        """
         user = self.users_collection.find_one({"_id": user_id})
         if not user:
             return {"error": "User not found"}, 404
@@ -149,7 +172,7 @@ class AuthService:
         return {"message": "Password updated successfully"}, 200
 
     def update_profile_photo(self, user_id, profile_photo):
-        """Stores a profile photo payload in the user document."""
+        """Store a user profile photo payload in the user's document."""
         if profile_photo is None:
             return {"error": "Profile photo is required"}, 400
 
@@ -160,8 +183,14 @@ class AuthService:
 
         return {"message": "Profile photo updated successfully"}, 200
 
+
 def token_required(f):
-    """Decorator to protect routes via JWT validation."""
+    """Decorator to protect Flask routes using JWT validation.
+
+    The wrapped route receives `current_user_id` as the first argument which
+    is the `sub` claim from the token. On failure the decorator returns a
+    JSON error payload with the appropriate HTTP status code.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
@@ -171,7 +200,7 @@ def token_required(f):
             parts = auth_header.split(" ")
             if len(parts) == 2 and parts[0] == "Bearer":
                 token = parts[1]
-                
+
         if not token:
             return jsonify({'error': 'Token is missing'}), 401
 

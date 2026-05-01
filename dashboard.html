@@ -1,3 +1,9 @@
+<!--
+    dashboard.html
+    Student dashboard showing readiness score, current and missing skills,
+    and the generated roadmap timeline. The page requests `/api/student/dashboard`
+    and `/api/student/roadmap` on load.
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,7 +37,7 @@
                         <i class="ph ph-chart-line-up"></i>
                         <span>Progress</span>
                     </a>
-                    <a href="#" class="nav-link">
+                    <a href="profile.html" class="nav-link">
                         <i class="ph ph-user"></i>
                         <span>Profile</span>
                     </a>
@@ -165,7 +171,7 @@
                         </div>
 
                         <div class="grid-2">
-                            <div class="course-card">
+                            <div class="course-card" data-course-title="Deep Learning Specialization" data-course-url="https://www.coursera.org/specializations/deep-learning" data-course-note="Strong match for neural network and sequence-model gaps.">
                                 <div class="course-header">
                                     <div class="course-icon"
                                         style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
@@ -175,12 +181,15 @@
                                 </div>
                                 <h4>Deep Learning Specialization</h4>
                                 <p>Master Neural Networks, CNNs, and Sequence Models using TensorFlow.</p>
-                                <button class="btn"
+                                <button class="btn start-course-btn"
+                                    data-course-title="Deep Learning Specialization"
+                                    data-course-url="https://www.coursera.org/specializations/deep-learning"
+                                    data-course-note="Strong match for neural network and sequence-model gaps."
                                     style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); margin-top: auto;">Start
                                     Course</button>
                             </div>
 
-                            <div class="course-card">
+                            <div class="course-card" data-course-title="MLOps Fundamentals" data-course-url="https://www.coursera.org/learn/mlops-fundamentals" data-course-note="Best next step if your roadmap includes deployment, APIs, or production ML.">
                                 <div class="course-header">
                                     <div class="course-icon"
                                         style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: rgba(245, 158, 11, 0.1); color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
@@ -190,9 +199,25 @@
                                 </div>
                                 <h4>MLOps Fundamentals</h4>
                                 <p>Learn to wrap models in APIs and deploy them to production servers.</p>
-                                <button class="btn"
+                                <button class="btn start-course-btn"
+                                    data-course-title="MLOps Fundamentals"
+                                    data-course-url="https://www.coursera.org/learn/mlops-fundamentals"
+                                    data-course-note="Best next step if your roadmap includes deployment, APIs, or production ML."
                                     style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); margin-top: auto;">Start
                                     Course</button>
+                            </div>
+                        </div>
+
+                        <div id="courseInsightBanner" class="dashboard-card"
+                            style="margin-top: 1rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(6,182,212,0.08)); border: 1px solid var(--border-color); display: none;">
+                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                                <i class="ph-fill ph-sparkle" style="color: var(--primary); font-size: 1.25rem; margin-top: 0.1rem;"></i>
+                                <div>
+                                    <strong id="courseInsightTitle">Smart recommendation</strong>
+                                    <p id="courseInsightText" style="margin-top: 0.35rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                                        Click a course to see why it fits your current roadmap.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
@@ -266,6 +291,7 @@
             </div>
         </main>
     </div>
+    <script src="js/config.js"></script>
     <script src="js/main.js"></script>
 </body>
 

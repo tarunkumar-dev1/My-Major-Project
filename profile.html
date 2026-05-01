@@ -1,3 +1,9 @@
+<!--
+    profile.html
+    User profile management page: update name, career goal, preferences and
+    profile photo. Submissions call `/api/student/profile` and changes to the
+    password call `/api/student/profile/password`.
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -451,12 +457,13 @@
             </div>
         </main>
     </div>
+    <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
         // Profile specific data fetching
         document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            const API_BASE = 'http://localhost:5000/api';
+            const token = localStorage.getItem('token') || localStorage.getItem('last_user_token');
+            const API_BASE = window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api';
 
             const profileState = {
                 name: '',
@@ -588,6 +595,11 @@
             if (!token) {
                 window.location.href = 'index.html';
                 return;
+            }
+
+            // Keep the active token available for other dashboard flows.
+            if (!localStorage.getItem('token') && localStorage.getItem('last_user_token')) {
+                localStorage.setItem('token', localStorage.getItem('last_user_token'));
             }
 
             fetch(`${API_BASE}/student/dashboard`, {

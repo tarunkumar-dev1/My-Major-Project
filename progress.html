@@ -1,3 +1,9 @@
+<!--
+    progress.html
+    Lightweight progress view showing completed modules and timeline.
+    Intended to complement the dashboard and provide a focused view on
+    completed roadmap items.
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -294,6 +300,7 @@
             </div>
         </main>
     </div>
+    <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -304,8 +311,8 @@
             }
 
             Promise.all([
-                fetch(`http://localhost:5000/api/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`http://localhost:5000/api/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`${window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api'}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api'}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
             ])
                 .then(async ([dashRes, roadRes]) => {
                     if (!dashRes.ok) throw new Error('Unauthorized');

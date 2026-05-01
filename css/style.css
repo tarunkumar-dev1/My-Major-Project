@@ -1,3 +1,10 @@
+/*
+    style.css
+    Centralized design tokens, layout primitives and component styles used by
+    the SkillGap frontend. Keep variables in `:root` so they can be overridden
+    for alternate themes or design updates.
+*/
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {

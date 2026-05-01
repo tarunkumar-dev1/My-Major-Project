@@ -1,3 +1,9 @@
+<!--
+    admin.html
+    Administrative dashboard for lightweight analytics and user inspection.
+    Access is protected by an admin JWT and the `admin_required` decorator on
+    the backend. Intended for developer/admin use in non-production setups.
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -82,6 +88,13 @@
                                     font-weight: 700;
                                     color: var(--primary);
                                 }
+                                .skill-editor-output {
+                                    white-space: pre-wrap;
+                                    word-break: break-word;
+                                    line-height: 1.45;
+                                    max-height: 320px;
+                                    overflow: auto;
+                                }
                                 @media (max-width: 1200px) {
                                     .stats-grid {
                                         grid-template-columns: repeat(2, 1fr);
@@ -101,7 +114,7 @@
                         <i class="ph ph-chart-line-up"></i>
                         <span>Progress</span>
                     </a>
-                    <a href="#" class="nav-link">
+                    <a href="profile.html" class="nav-link">
                         <i class="ph ph-user"></i>
                         <span>Profile</span>
                     </a>
@@ -155,28 +168,28 @@
                         style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                         <i class="ph-fill ph-users"
                             style="font-size: 2.5rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
-                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">12,450</h2>
+                        <h2 id="adminTotalUsers" style="font-size: 1.8rem; margin-bottom: 0.25rem;">0</h2>
                         <span style="font-size: 0.85rem; color: var(--text-secondary);">Total Active Students</span>
                     </div>
                     <div class="dashboard-card"
                         style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                         <i class="ph-fill ph-briefcase"
                             style="font-size: 2.5rem; color: var(--accent); margin-bottom: 0.5rem;"></i>
-                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">24</h2>
+                        <h2 id="adminCareerPaths" style="font-size: 1.8rem; margin-bottom: 0.25rem;">0</h2>
                         <span style="font-size: 0.85rem; color: var(--text-secondary);">Career Paths Supported</span>
                     </div>
                     <div class="dashboard-card"
                         style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                         <i class="ph-fill ph-book-open-text"
                             style="font-size: 2.5rem; color: #10B981; margin-bottom: 0.5rem;"></i>
-                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">142</h2>
+                        <h2 id="adminCourseCount" style="font-size: 1.8rem; margin-bottom: 0.25rem;">0</h2>
                         <span style="font-size: 0.85rem; color: var(--text-secondary);">Linked Courses</span>
                     </div>
                     <div class="dashboard-card"
                         style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                         <i class="ph-fill ph-magic-wand"
                             style="font-size: 2.5rem; color: #F59E0B; margin-bottom: 0.5rem;"></i>
-                        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">45.2K</h2>
+                        <h2 id="adminAnalysesRun" style="font-size: 1.8rem; margin-bottom: 0.25rem;">0</h2>
                         <span style="font-size: 0.85rem; color: var(--text-secondary);">Skill Analyses Run</span>
                     </div>
                 </div>
@@ -202,57 +215,9 @@
                                         <th style="text-align: right;">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="recentSignupsBody">
                                     <tr>
-                                        <td>
-                                            <div class="user-cell">
-                                                <div class="avatar-sm">EK</div>
-                                                <span>Emma Khan</span>
-                                            </div>
-                                        </td>
-                                        <td>Frontend Dev</td>
-                                        <td><span style="font-weight: 600; color: #10B981;">84%</span></td>
-                                        <td><span class="tag tag-success"
-                                                style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Active</span></td>
-                                        <td style="text-align: right;">
-                                            <button
-                                                style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary);"><i
-                                                    class="ph ph-dots-three" style="font-size: 1.25rem;"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="user-cell">
-                                                <div class="avatar-sm">LJ</div>
-                                                <span>Lucas Jones</span>
-                                            </div>
-                                        </td>
-                                        <td>Data Scientist</td>
-                                        <td><span style="font-weight: 600; color: #EF4444;">32%</span></td>
-                                        <td><span class="tag tag-success"
-                                                style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Active</span></td>
-                                        <td style="text-align: right;">
-                                            <button
-                                                style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary);"><i
-                                                    class="ph ph-dots-three" style="font-size: 1.25rem;"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="user-cell">
-                                                <div class="avatar-sm">SM</div>
-                                                <span>Sarah Meyer</span>
-                                            </div>
-                                        </td>
-                                        <td>ML Engineer</td>
-                                        <td><span style="font-weight: 600; color: #F59E0B;">64%</span></td>
-                                        <td><span class="tag tag-warning"
-                                                style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Idle</span></td>
-                                        <td style="text-align: right;">
-                                            <button
-                                                style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary);"><i
-                                                    class="ph ph-dots-three" style="font-size: 1.25rem;"></i></button>
-                                        </td>
+                                        <td colspan="5" style="color: var(--text-secondary); text-align: center; padding: 1.5rem;">Loading recent users...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -268,26 +233,8 @@
                         </div>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Direct JSON
                             editor for required role skills mapping. Validate before save.</p>
-                        <div
-                            style="background-color: var(--bg-input); padding: 1.5rem; border-radius: var(--radius-sm); font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; color: var(--text-primary); border: 1px solid var(--border-color); flex: 1; overflow-y: auto;">
-                            {<br>
-                            &nbsp;&nbsp;<span style="color: #10B981;">"Machine Learning Engineer"</span>: [<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"Python"</span>, <span
-                                style="color: #F59E0B;">"TensorFlow"</span>, <span
-                                style="color: #F59E0B;">"PyTorch"</span>,<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"SQL"</span>, <span
-                                style="color: #F59E0B;">"MLOps"</span>, <span
-                                style="color: #F59E0B;">"Algorithms"</span><br>
-                            &nbsp;&nbsp;],<br>
-                            &nbsp;&nbsp;<span style="color: #10B981;">"Frontend Developer"</span>: [<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"HTML"</span>, <span
-                                style="color: #F59E0B;">"CSS"</span>, <span
-                                style="color: #F59E0B;">"JavaScript"</span>,<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #F59E0B;">"React"</span>, <span
-                                style="color: #F59E0B;">"TypeScript"</span><br>
-                            &nbsp;&nbsp;]<br>
-                            }
-                        </div>
+                        <pre id="skillDatasetEditor" class="skill-editor-output"
+                            style="background-color: var(--bg-input); padding: 1.5rem; border-radius: var(--radius-sm); font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; color: var(--text-primary); border: 1px solid var(--border-color); flex: 1; overflow-y: auto; margin: 0;">Loading career data...</pre>
                         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                             <button class="btn"
                                 style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">Cancel</button>
@@ -299,6 +246,7 @@
             </div>
         </main>
     </div>
+    <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -308,19 +256,133 @@
                 return;
             }
 
+            const apiBase = window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api';
+            const totalUsersEl = document.getElementById('adminTotalUsers');
+            const careerPathsEl = document.getElementById('adminCareerPaths');
+            const courseCountEl = document.getElementById('adminCourseCount');
+            const analysesRunEl = document.getElementById('adminAnalysesRun');
+            const recentSignupsBody = document.getElementById('recentSignupsBody');
+            const skillDatasetEditor = document.getElementById('skillDatasetEditor');
+
+            function formatPercent(value) {
+                const numeric = Number(value || 0);
+                return `${numeric}%`;
+            }
+
+            function escapeHtml(text) {
+                return String(text || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function getStatusClass(user) {
+                if ((user.login_count || 0) > 0) {
+                    return 'tag-success';
+                }
+                return 'tag-warning';
+            }
+
+            function getStatusLabel(user) {
+                return (user.login_count || 0) > 0 ? 'Active' : 'Idle';
+            }
+
+            function renderRecentSignups(users) {
+                if (!recentSignupsBody) {
+                    return;
+                }
+
+                if (!users || users.length === 0) {
+                    recentSignupsBody.innerHTML = '<tr><td colspan="5" style="color: var(--text-secondary); text-align: center; padding: 1.5rem;">No users found yet.</td></tr>';
+                    return;
+                }
+
+                recentSignupsBody.innerHTML = users.map((user) => {
+                    const initials = (user.name || 'U').substring(0, 2).toUpperCase();
+                    const readiness = Number(user.readiness_score || 0);
+                    const readinessColor = readiness >= 75 ? '#10B981' : readiness >= 40 ? '#F59E0B' : '#EF4444';
+
+                    return `
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="avatar-sm">${escapeHtml(initials)}</div>
+                                    <span>${escapeHtml(user.name || 'Unknown User')}</span>
+                                </div>
+                            </td>
+                            <td>${escapeHtml(user.career_goal || 'Not set')}</td>
+                            <td><span style="font-weight: 600; color: ${readinessColor};">${formatPercent(readiness)}</span></td>
+                            <td><span class="tag ${getStatusClass(user)}" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">${getStatusLabel(user)}</span></td>
+                            <td style="text-align: right;">
+                                <button style="background: transparent; border: none; cursor: pointer; color: var(--text-secondary);"><i class="ph ph-dots-three" style="font-size: 1.25rem;"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function renderCareerCatalog(careers) {
+                if (!skillDatasetEditor) {
+                    return;
+                }
+
+                if (!careers || careers.length === 0) {
+                    skillDatasetEditor.textContent = 'No career catalog data found.';
+                    return;
+                }
+
+                const catalog = careers.reduce((acc, career) => {
+                    acc[career.career_name] = career.required_skills || [];
+                    return acc;
+                }, {});
+
+                skillDatasetEditor.textContent = JSON.stringify(catalog, null, 2);
+            }
+
             try {
-                const res = await fetch('http://localhost:5000/api/admin/dashboard', {
+                const res = await fetch(`${apiBase}/admin/dashboard`, {
                     headers: { Authorization: `Bearer ${adminToken}` }
                 });
+
+                const payload = await res.json();
 
                 if (!res.ok) {
                     localStorage.removeItem('admin_token');
                     localStorage.removeItem('admin_username');
                     window.location.href = 'admin-login.html';
+                    return;
                 }
+
+                const stats = payload.stats || {};
+                const recentUsers = payload.recent_signups || [];
+                const careerCatalog = payload.career_catalog || [];
+
+                if (totalUsersEl) {
+                    totalUsersEl.textContent = Number(stats.total_users || 0).toLocaleString();
+                }
+                if (careerPathsEl) {
+                    careerPathsEl.textContent = Number(stats.career_paths || 0).toLocaleString();
+                }
+                if (courseCountEl) {
+                    courseCountEl.textContent = Number(careerCatalog.length || 0).toLocaleString();
+                }
+                if (analysesRunEl) {
+                    analysesRunEl.textContent = Number(stats.skill_analyses_run || 0).toLocaleString();
+                }
+
+                renderRecentSignups(recentUsers);
+                renderCareerCatalog(careerCatalog);
             } catch (err) {
                 localStorage.removeItem('admin_token');
                 localStorage.removeItem('admin_username');
+                if (recentSignupsBody) {
+                    recentSignupsBody.innerHTML = '<tr><td colspan="5" style="color: var(--text-secondary); text-align: center; padding: 1.5rem;">Unable to load admin data.</td></tr>';
+                }
+                if (skillDatasetEditor) {
+                    skillDatasetEditor.textContent = 'Unable to load career catalog.';
+                }
                 window.location.href = 'admin-login.html';
             }
         });

@@ -1,3 +1,18 @@
+/*
+    main.js
+    Frontend UI behavior and API integration helpers used across pages.
+
+    Responsibilities:
+        - Theme persistence and toggle
+        - Client-side input validation (Gmail/password policy)
+        - Login/signup/admin flows with fetch to backend API
+        - Dashboard and roadmap rendering
+        - Small UX helpers (profile quick-switch, logout handling)
+
+    The script is written defensively to no-op when particular DOM elements
+    are not present (so the same script may be included on multiple pages).
+*/
+
 // Immediately apply the saved theme
 const savedTheme = localStorage.getItem('theme') || 'light';
 if (savedTheme === 'dark') {
@@ -22,6 +37,52 @@ function isAdminPage() {
 
 function isAdminLoginPage() {
     return window.location.pathname.endsWith('admin-login.html');
+}
+
+function isDashboardPage() {
+    return window.location.pathname.endsWith('dashboard.html');
+}
+
+function showCourseInsight(courseTitle, courseNote) {
+    const insightBanner = document.getElementById('courseInsightBanner');
+    const insightTitle = document.getElementById('courseInsightTitle');
+    const insightText = document.getElementById('courseInsightText');
+
+    if (!insightBanner || !insightTitle || !insightText) {
+        return;
+    }
+
+    insightTitle.textContent = `Smart pick: ${courseTitle}`;
+    insightText.textContent = courseNote;
+    insightBanner.style.display = 'block';
+}
+
+function openRecommendedCourse(courseCard, apiBase) {
+    const title = courseCard.getAttribute('data-course-title') || 'Recommended Course';
+    const courseUrl = courseCard.getAttribute('data-course-url') || '#';
+    const courseNote = courseCard.getAttribute('data-course-note') || 'This course matches your current roadmap.';
+
+    // Remember the user's choice so the dashboard can surface it later.
+    localStorage.setItem('last_recommended_course', JSON.stringify({
+        title,
+        url: courseUrl,
+        note: courseNote,
+        clickedAt: new Date().toISOString()
+    }));
+
+    showCourseInsight(title, courseNote);
+
+    // Give the user immediate feedback and a clear path forward.
+    if (courseUrl && courseUrl !== '#') {
+        window.open(courseUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    // Add a small intelligent nudge based on the current page state.
+    if (apiBase) {
+        setTimeout(() => {
+            console.info(`Smart recommendation opened: ${title}`);
+        }, 0);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -63,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- API Integration Section ---
-    const API_BASE = 'http://localhost:5000/api';
+    const API_BASE = window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api';
 
     // Login Form
     const loginForm = document.getElementById('loginForm');
@@ -410,6 +471,39 @@ document.addEventListener('DOMContentLoaded', () => {
                                 localStorage.removeItem('token');
                                 window.location.href = 'index.html';
                             });
+                        }
+
+                        // Make both recommended course cards interactive.
+                        document.querySelectorAll('.course-card').forEach((card) => {
+                            card.style.cursor = 'pointer';
+                            card.setAttribute('role', 'button');
+                            card.setAttribute('tabindex', '0');
+
+                            const triggerOpen = () => openRecommendedCourse(card, API_BASE);
+
+                            card.addEventListener('click', (event) => {
+                                const clickedButton = event.target.closest('.start-course-btn');
+                                if (clickedButton || event.currentTarget === card) {
+                                    triggerOpen();
+                                }
+                            });
+
+                            card.addEventListener('keydown', (event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    triggerOpen();
+                                }
+                            });
+                        });
+
+                        const recommendedCourse = localStorage.getItem('last_recommended_course');
+                        if (recommendedCourse) {
+                            try {
+                                const parsed = JSON.parse(recommendedCourse);
+                                showCourseInsight(parsed.title, `${parsed.note} Last opened on ${new Date(parsed.clickedAt).toLocaleString()}.`);
+                            } catch (error) {
+                                // Ignore malformed stored state.
+                            }
                         }
                     }
                 })
