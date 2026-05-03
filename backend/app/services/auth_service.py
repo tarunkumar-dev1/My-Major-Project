@@ -44,11 +44,18 @@ class AuthService:
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode('utf-8'), salt)
 
-    def is_valid_gmail(self, email):
-        """Validate the email is a Gmail address. Returns boolean."""
+    def is_valid_email(self, email):
+        """Validate a basic email address. Returns boolean.
+
+        The previous implementation required Gmail addresses only which caused
+        valid non-gmail registrations to be rejected. Use a simple, general
+        email validation here for better UX while keeping server-side checks
+        lightweight.
+        """
         if not email:
             return False
-        return bool(re.fullmatch(r'[A-Za-z0-9._%+-]+@gmail\.com', email.strip(), re.IGNORECASE))
+        # Simple RFC-lite email regex: user@domain.tld (no spaces)
+        return bool(re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email.strip()))
 
     def is_strong_password(self, password):
         """Enforce a minimal password strength policy used at registration."""
@@ -68,8 +75,8 @@ class AuthService:
 
         Returns `(payload, status_code)` to be returned directly by routes.
         """
-        if not self.is_valid_gmail(email):
-            return {"error": "Only valid Gmail addresses are allowed"}, 400
+        if not self.is_valid_email(email):
+            return {"error": "Please provide a valid email address"}, 400
 
         if not self.is_strong_password(password):
             return {"error": "Password must be at least 8 characters long and include letters, numbers, and symbols"}, 400
@@ -112,8 +119,8 @@ class AuthService:
 
     def login_user(self, email, password):
         """Authenticate a user and return a fresh JWT on success."""
-        if not self.is_valid_gmail(email):
-            return {"error": "Only valid Gmail addresses are allowed"}, 400
+        if not self.is_valid_email(email):
+            return {"error": "Please provide a valid email address"}, 400
 
         user = self.users_collection.find_one({"email": email})
 

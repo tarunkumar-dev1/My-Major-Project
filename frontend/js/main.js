@@ -9,10 +9,9 @@ if (savedTheme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
 }
 
-function isValidGmail(email) {
-    // Validate that the provided email is a gmail address. This is a
-    // lightweight client-side check for UX only; server-side must re-verify.
-    return /^[A-Za-z0-9._%+-]+@gmail\.com$/i.test((email || "").trim());
+function isValidEmail(email) {
+    // Lightweight client-side email validation (RFC-lite).
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/i.test((email || "").trim());
 }
 
 function isStrongPassword(password) {
@@ -425,8 +424,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const email = emailField ? emailField.value : "";
             const password = passwordField ? passwordField.value : "";
 
-            if (!isValidGmail(email)) {
-                alert("Please enter a valid Gmail address.");
+            if (!isValidEmail(email)) {
+                alert("Please enter a valid email address.");
                 btn.textContent = originalText;
                 btn.disabled = false;
                 return;
@@ -495,8 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const career_goal = careerField ? careerField.value : "";
             let profile_photo = null;
 
-            if (!isValidGmail(email)) {
-                alert("Only valid Gmail addresses are allowed.");
+            if (!isValidEmail(email)) {
+                alert("Only valid email addresses are allowed.");
                 btn.textContent = originalText;
                 btn.disabled = false;
                 return;
@@ -1003,6 +1002,74 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "admin-login.html";
             });
         }
+
+        // Fetch admin dashboard data and populate the UI
+        (async function loadAdminData() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/dashboard`, {
+                    headers: { Authorization: `Bearer ${adminToken}` },
+                });
+                if (!res.ok) {
+                    localStorage.removeItem("admin_token");
+                    window.location.href = "admin-login.html";
+                    return;
+                }
+                const payload = await res.json();
+
+                // Populate stat cards (ensure admin.html defines these ids)
+                const stats = payload.stats || {};
+                const setText = (id, value) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = value !== undefined ? value : "0";
+                };
+
+                setText(
+                    "statActiveUsers",
+                    stats.active_users || stats.total_users || 0,
+                );
+                setText("statCareerPaths", stats.career_paths || 0);
+                setText("statLinkedCourses", stats.skill_analyses_run || 0);
+                setText("statAnalysesRun", stats.skill_analyses_run || 0);
+
+                // Recent signups table
+                const tbody = document.getElementById("recentSignupsBody");
+                if (tbody) {
+                    tbody.innerHTML = "";
+                    (payload.recent_signups || []).forEach((u) => {
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = `
+                            <td style="min-width:200px;">
+                                <div style="display:flex;gap:0.5rem;align-items:center;">
+                                    <div class="admin-avatar">${(u.name || u.email || "--").substring(0, 2).toUpperCase()}</div>
+                                    <div>
+                                        <div style="font-weight:600">${u.name || "Unknown"}</div>
+                                        <div style="font-size:0.85rem;color:var(--text-muted)">${u.email || ""}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${u.career_goal || "—"}</td>
+                            <td>${u.readiness_score || 0}%</td>
+                            <td>${u.login_count || 0}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                // Career trends
+                const trendsWrap = document.getElementById("careerTrends");
+                if (trendsWrap) {
+                    trendsWrap.innerHTML = "";
+                    (payload.career_trends || []).slice(0, 8).forEach((t) => {
+                        const d = document.createElement("div");
+                        d.className = "trend-item";
+                        d.innerHTML = `<div>${t._id || "Unknown"}</div><div class="trend-count">${t.count || 0}</div>`;
+                        trendsWrap.appendChild(d);
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to load admin data:", err);
+            }
+        })();
     }
 
     if (isAdminLoginPage()) {
