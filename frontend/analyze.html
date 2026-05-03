@@ -1,3 +1,9 @@
+<!--
+    analyze.html
+    Student skill submission UI where users list current skills and select a
+    career goal. Submissions are sent to `/api/student/submit-skills` and the
+    backend returns an analysis and a generated roadmap.
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -31,7 +37,7 @@
                         <i class="ph ph-chart-line-up"></i>
                         <span>Progress</span>
                     </a>
-                    <a href="#" class="nav-link">
+                    <a href="profile.html" class="nav-link">
                         <i class="ph ph-user"></i>
                         <span>Profile</span>
                     </a>
@@ -118,10 +124,11 @@
             </div>
         </main>
     </div>
+    <script src="js/config.js"></script>
     <script src="js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const API_BASE = 'http://localhost:5000/api';
+            const API_BASE = window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api';
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = 'index.html';

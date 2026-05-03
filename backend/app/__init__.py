@@ -1,56 +1,61 @@
 """
-Flask application factory for the backend.
+Application factory and Flask application setup for SkillGap.
 
-The `create_app` factory follows Flask best practices: it creates and
-configures the Flask application, registers blueprints and extensions, and
-initializes the database connection within the application context.
-
-This keeps module import time free of side-effects so WSGI servers can import
-`backend.app:create_app` or the `app` variable from `backend/app.py` safely.
+This module exposes the `create_app` factory used to construct and configure
+Flask, initialize the database connection, and register API blueprints.
 """
+
+import logging
 
 from flask import Flask, jsonify
 from flask_cors import CORS
+
 from .database.connection import init_db
 from config import Config
-import logging
+
+
+def _parse_frontend_origins(raw_value):
+    """Convert configured frontend origins into Flask-CORS format."""
+    if not raw_value or raw_value == "*":
+        return "*"
+
+    origins = [origin.strip() for origin in raw_value.split(",") if origin.strip()]
+    return origins or "*"
 
 
 def create_app(config_class=Config):
-    # Initialize Flask app
+    """Create and configure the Flask application instance."""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Enable CORS (for local development the frontend may be served separately)
-    CORS(app)
+    cors_origins = _parse_frontend_origins(app.config.get("FRONTEND_ORIGINS"))
+    CORS(app, resources={
+        r"/api/*": {"origins": cors_origins},
+        r"/health": {"origins": cors_origins}
+    })
 
-    # Initialize Logging with a simple, readable format
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-    # Initialize DB Connection wrapped in app context. The function will
-    # create the MongoDB client and attach it to the application state.
     with app.app_context():
-        init_db(app.config['MONGO_URI'])
+        init_db(app.config["MONGO_URI"])
 
-    # Register blueprints after app and DB are ready
     from .routes.auth_routes import auth_bp
     from .routes.student_routes import student_bp
     from .routes.admin_routes import admin_bp
 
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(student_bp, url_prefix='/api/student')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(student_bp, url_prefix="/api/student")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
 
-    # Global Error Handlers return consistent JSON responses for common errors
     @app.errorhandler(404)
     def not_found_error(error):
-        return jsonify({'error': 'Not Found'}), 404
+        return jsonify({"error": "Not Found"}), 404
 
     @app.errorhandler(500)
     def internal_error(error):
-        return jsonify({'error': 'Internal Server Error'}), 500
+        return jsonify({"error": "Internal Server Error"}), 500
 
-    @app.route('/health')
+    @app.route("/health")
     def health_check():
         return jsonify({"status": "healthy", "service": "SkillGap AI Analyzer"})
 

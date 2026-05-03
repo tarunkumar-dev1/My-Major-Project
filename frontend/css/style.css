@@ -1,3 +1,10 @@
+/*
+    style.css
+    Centralized design tokens, layout primitives and component styles used by
+    the SkillGap frontend. Keep variables in `:root` so they can be overridden
+    for alternate themes or design updates.
+*/
+
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -217,6 +224,50 @@ h6 {
 
     100% {
         transform: translate(-50px, -50px);
+    }
+}
+
+/* Animation for readiness score pulse effect when skill is completed */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Animation for success notification slide in */
+@keyframes slideIn {
+    0% {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Animation for success notification slide out */
+@keyframes slideOut {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(400px);
+        opacity: 0;
     }
 }
 

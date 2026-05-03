@@ -1,3 +1,9 @@
+<!--
+    admin-login.html
+    Simple admin authentication page used during development.
+    Note: Admin credentials are read from backend config; this page posts to
+    `/api/admin/login` and stores the returned admin token in `localStorage`.
+-->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,6 +53,7 @@
             </div>
         </div>
     </div>
+    <script src="js/config.js"></script>
     <script src="js/main.js?v=20260426"></script>
 </body>
 

@@ -1,3 +1,12 @@
+"""
+Admin HTTP routes for lightweight administrative tasks and analytics.
+
+This blueprint protects endpoints using the `admin_required` decorator which
+validates that the JWT token contains the `role: admin` claim. Admin
+credentials are stored in `Config` for development; consider replacing this
+with a proper admin user collection for production.
+"""
+
 import datetime
 import jwt
 from functools import wraps
@@ -8,6 +17,11 @@ admin_bp = Blueprint('admin_bp', __name__)
 
 
 def admin_required(f):
+    """Decorator to ensure the request has a valid admin JWT token.
+
+    The decorator decodes the token from the `Authorization` header and
+    verifies the `role` claim equals `'admin'`.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
@@ -35,6 +49,12 @@ def admin_required(f):
 
 @admin_bp.route('/login', methods=['POST'])
 def admin_login():
+    """Authenticate using developer/admin credentials from config.
+
+    Returns a short-lived token with `role: admin` that admin_required checks
+    for. This is convenient for local testing; do not use hardcoded
+    credentials in production.
+    """
     data = request.get_json() or {}
     username = (data.get('username') or '').strip()
     password = data.get('password') or ''
@@ -66,12 +86,17 @@ def admin_login():
 @admin_bp.route('/dashboard', methods=['GET'])
 @admin_required
 def admin_dashboard():
+    """Aggregate lightweight analytics for the admin UI.
+
+    The route compiles basic stats (counts, averages, trends) and returns the
+    entire user list (excluding passwords) for quick inspection.
+    """
     db = get_db()
     users_col = db['users']
     careers_col = db['careers']
     login_events_col = db['login_events']
 
-    users_cursor = users_col.find({}, {'hashed_password': 0})
+    users_cursor = users_col.find({}, {'hashed_password': 0}).sort('created_at', -1)
     users_list = []
     total_readiness = 0
     active_users = 0
@@ -89,16 +114,22 @@ def admin_dashboard():
 
     total_users = len(users_list)
     avg_readiness = round(total_readiness / total_users, 1) if total_users else 0
+    recent_signups = users_list[:5]
     career_trends = list(users_col.aggregate([
         {'$group': {'_id': '$career_goal', 'count': {'$sum': 1}}},
         {'$sort': {'count': -1}}
     ]))
     career_trends = [trend for trend in career_trends if trend['_id']]
 
+    career_catalog = []
+    for career in careers_col.find({}, {'_id': 0}).sort('career_name', 1):
+        career_catalog.append(career)
+
     stats = {
         'total_users': total_users,
         'active_users': active_users,
         'career_paths': careers_col.count_documents({}),
+        'skill_analyses_run': db['roadmaps'].count_documents({}),
         'login_events': login_events_col.count_documents({}),
         'avg_readiness': avg_readiness,
         'career_trends': career_trends,
@@ -107,13 +138,16 @@ def admin_dashboard():
 
     return jsonify({
         'stats': stats,
-        'users': users_list
+        'users': users_list,
+        'recent_signups': recent_signups,
+        'career_catalog': career_catalog
     }), 200
 
 
 @admin_bp.route('/users', methods=['GET'])
 @admin_required
 def get_all_users():
+    """Return all user documents (safe for admin inspection)."""
     db = get_db()
     users_col = db['users']
     users_cursor = users_col.find({}, {'hashed_password': 0})

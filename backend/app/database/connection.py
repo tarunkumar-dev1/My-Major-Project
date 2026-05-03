@@ -1,17 +1,33 @@
+"""
+Database connection helpers for the application.
+
+This module abstracts the logic of connecting to a real MongoDB server and
+falls back to an in-memory `mongomock` instance when a live server is
+unreachable. It also provides a small seeding routine for sample data which
+is convenient for development and tests.
+"""
+
 import logging
 import bcrypt
 
 import mongomock
 from pymongo import MongoClient
 
+
 db = None
 
 
 def init_db(mongo_uri):
     """Initializes the MongoDB connection.
-    Uses a real MongoDB server when available, otherwise falls back to mongomock for local demo mode.
-    This function ensures an in-memory mongomock database is available for local testing even if the
-    external MongoDB is unreachable.
+
+    Uses a real MongoDB server when available, otherwise falls back to
+    `mongomock` for local demo mode. The function seeds a small amount of
+    example data if collections are empty to make the development experience
+    smoother.
+
+    Args:
+        mongo_uri (str): Connection URI for MongoDB. If falsy, `mongomock` is
+            used automatically.
     """
     global db
 
@@ -23,10 +39,12 @@ def init_db(mongo_uri):
             client.admin.command("ping")
             logging.info(f"Connected to MongoDB: {mongo_uri}")
         except Exception as exc:
+            # If remote DB is not reachable, fall back to in-memory DB for
+            # development and testing. The exception is logged for debugging.
             logging.warning(f"Real MongoDB connection failed, falling back to mongomock: {exc}")
             client = None
 
-    # Always ensure we have a client (mongomock as fallback)
+    # Ensure we have a client; use mongomock as a reliable fallback
     if client is None:
         client = mongomock.MongoClient()
         logging.info("Using mongomock in-memory database")
@@ -45,6 +63,9 @@ def init_db(mongo_uri):
             })
 
         if db.careers.count_documents({}) == 0:
+            # Insert a small set of canonical career documents to bootstrap the
+            # local/demo database. This list is intentionally limited and can be
+            # extended as needed.
             db.careers.insert_many([
                 {"career_name": "Machine Learning Engineer", "required_skills": ["Python", "TensorFlow", "PyTorch", "SQL", "MLOps", "Data Structures", "Algorithms"], "difficulty_level": "Advanced"},
                 {"career_name": "Data Scientist", "required_skills": ["Python", "R", "SQL", "Statistics", "Machine Learning", "Data Visualization", "pandas"], "difficulty_level": "Advanced"},
@@ -58,13 +79,17 @@ def init_db(mongo_uri):
 
         logging.info(f"Database ready: {db.name}")
     except Exception as e:
+        # Log seeding problems but do not abort initialization; this keeps the
+        # application usable even if example data could not be created.
         logging.exception(f"Error seeding database: {e}")
 
 
 def get_db():
     """
     Returns the initialized database instance.
-    Throws an Exception if not initialized.
+
+    Raises:
+        Exception: If `init_db` has not been called prior to this function.
     """
     if db is None:
         raise Exception("Database connection is not initialized. Please check MongoDB.")

@@ -1,29 +1,17 @@
 """
-WSGI entry for the Flask application.
+WSGI entrypoint for the SkillGap backend application.
 
-This module exposes a WSGI `app` object which production servers (for example
-gunicorn) can import using `gunicorn backend.app:app` or `gunicorn app:app`
-depending on the working directory. Keep this file minimal — it should only
-create the application and avoid side-effects.
-
-Usage:
-    - Development: `python backend/app.py` (runs Flask's dev server)
-    - Production (gunicorn): `gunicorn backend.app:app --bind 0.0.0.0:$PORT`
-
-Notes:
-    - The factory function `create_app()` lives in `backend/app/__init__.py` and
-        centralizes blueprint registration and extension initialization.
-    - Do not import heavy modules at module import time to keep WSGI startup fast.
+This module constructs the Flask application by calling `create_app()` from
+`backend/app/__init__.py`. The Flask development server is only started when
+this file is executed directly.
 """
 
 from app import create_app
 
-# Create the Flask WSGI application. This variable name (`app`) is what
-# WSGI servers (gunicorn) will import, e.g. `gunicorn backend.app:app`.
+# WSGI application object (used by local runs and compatible runners).
 app = create_app()
 
 
 if __name__ == "__main__":
-        # Development server: only use during local development and debugging.
-        # The production deployment should use a WSGI server instead.
-        app.run(debug=True, host='0.0.0.0', port=5000)
+    # Local development server only. Use gunicorn in production.
+    app.run(debug=True, host="0.0.0.0", port=5000)

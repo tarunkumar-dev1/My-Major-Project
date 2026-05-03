@@ -1,3 +1,12 @@
+"""
+Roadmap generation and persistence service.
+
+This module interacts with an optional Gemini LLM to produce personalized
+learning steps for missing skills. When the LLM is unavailable or times out,
+it falls back to a deterministic template. Roadmaps are saved per-user in the
+`roadmaps` collection.
+"""
+
 import datetime
 import json
 import logging
@@ -6,17 +15,30 @@ import google.generativeai as genai
 from config import Config
 from app.database.connection import get_db
 
+
 class RoadmapService:
+    """Service responsible for creating and storing learning roadmaps.
+
+    If a Gemini API key is configured (`Config.GEMINI_API_KEY`), this service
+    will attempt to use the LLM for tailored roadmap content. Otherwise it
+    provides a simple fallback template that is deterministic and quick.
+    """
+
     def __init__(self):
         self.db = get_db()
         self.roadmaps_collection = self.db['roadmaps']
         self.ai_enabled = bool(Config.GEMINI_API_KEY)
         if self.ai_enabled:
-            # We use gemini-2.0-flash-lite for fast text generation
+            # Select a fast/light model for short generation tasks
             self.model = genai.GenerativeModel('gemini-2.0-flash-lite')
 
     def _generate_with_timeout(self, prompt, timeout=20):
-        """Calls generate_content with a timeout to prevent hanging on rate limits."""
+        """Call the LLM's generate routine but enforce a wall-clock timeout.
+
+        The underlying Gemini client may block on network or rate-limit
+        conditions — running it inside a background thread lets us return a
+        fallback quickly if needed.
+        """
         result = [None]
         error = [None]
 
@@ -39,11 +61,17 @@ class RoadmapService:
         return result[0]
 
     def generate_roadmap_steps(self, missing_skills, user_skills, career_goal):
-        """Generates a structured learning sequence using Gemini LLM."""
+        """Generate a JSON-serializable list of roadmap steps for the user.
+
+        If the AI is enabled this delegates to the Gemini model and attempts to
+        parse its JSON output. If parsing fails or the model times out, the
+        function falls back to a simple generated template to ensure UX remains
+        responsive.
+        """
         if not self.ai_enabled:
             logging.warning("AI disabled. Falling back to template roadmap.")
             return self._generate_fallback_steps(missing_skills)
-            
+
         if not missing_skills:
             return []
 
@@ -72,7 +100,7 @@ class RoadmapService:
             }}
         ]
         """
-        
+
         try:
             response = self._generate_with_timeout(prompt, timeout=20)
             if response is None:
@@ -85,19 +113,20 @@ class RoadmapService:
                 json_text = json_text.split("\n", 1)[1]
             if json_text.endswith("```"):
                 json_text = json_text.rsplit("\n", 1)[0]
-                
+
             steps = json.loads(json_text.strip())
-            
+
             # Ensure correct numbering
             for i, step in enumerate(steps):
                 step['step_number'] = i + 1
-                
+
             return steps
         except Exception as e:
             logging.error(f"LLM roadmap generation failed: {e}. Falling back to template.")
             return self._generate_fallback_steps(missing_skills)
 
     def _generate_fallback_steps(self, missing_skills):
+        """Create a deterministic fallback roadmap when AI is unavailable."""
         steps = []
         for i, skill in enumerate(missing_skills):
             steps.append({
@@ -115,14 +144,18 @@ class RoadmapService:
         return steps
 
     def save_user_roadmap(self, user_id, missing_skills, generated_steps):
-        """Saves or updates the user's roadmap in the database."""
+        """Persist or update the user's roadmap document in MongoDB.
+
+        The method stores a timestamp in `updated_at` to help clients show when
+        the roadmap was last refreshed.
+        """
         roadmap_doc = {
             "user_id": user_id,
             "missing_skills": missing_skills,
             "generated_steps": generated_steps,
             "updated_at": datetime.datetime.utcnow()
         }
-        
+
         self.roadmaps_collection.update_one(
             {"user_id": user_id},
             {"$set": roadmap_doc},
@@ -131,5 +164,5 @@ class RoadmapService:
         return roadmap_doc
 
     def get_user_roadmap(self, user_id):
-        """Retrieves a user's current roadmap."""
+        """Retrieve the roadmap for `user_id`, omitting the internal `_id` field."""
         return self.roadmaps_collection.find_one({"user_id": user_id}, {"_id": 0})

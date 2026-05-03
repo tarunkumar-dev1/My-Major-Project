@@ -1,22 +1,9 @@
 /*
- * frontend/js/main.js
- * Central client-side UI logic for SkillGap Analyzer.
- *
- * Purpose and guidance:
- *  - This file contains UI helpers, form handlers, and simple API calls
- *    used by the static frontend pages under `frontend/`.
- *  - For development the backend base URL is `http://localhost:5000/api`.
- *    Before deploying to production (Vercel), change `API_BASE` to your
- *    production API URL or configure a rewrite/proxy so that `/api` routes
- *    reach the backend.
- *  - Tokens are stored in `localStorage` for simplicity. For higher
- *    security use HTTP-only cookies in production and CSRF protections.
- *
- * Commenting policy:
- *  - Keep logic simple and avoid leaking secrets into client code.
+ * main.js
+ * Frontend UI behavior and API integration helpers used across pages.
  */
 
-// Immediately apply the saved theme preference to reduce flash-of-unstyled-theme.
+// Immediately apply the saved theme.
 const savedTheme = localStorage.getItem('theme') || 'light';
 if (savedTheme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
@@ -42,6 +29,52 @@ function isAdminPage() {
 
 function isAdminLoginPage() {
     return window.location.pathname.endsWith('admin-login.html');
+}
+
+function isDashboardPage() {
+    return window.location.pathname.endsWith('dashboard.html');
+}
+
+function showCourseInsight(courseTitle, courseNote) {
+    const insightBanner = document.getElementById('courseInsightBanner');
+    const insightTitle = document.getElementById('courseInsightTitle');
+    const insightText = document.getElementById('courseInsightText');
+
+    if (!insightBanner || !insightTitle || !insightText) {
+        return;
+    }
+
+    insightTitle.textContent = `Smart pick: ${courseTitle}`;
+    insightText.textContent = courseNote;
+    insightBanner.style.display = 'block';
+}
+
+function openRecommendedCourse(courseCard, apiBase) {
+    const title = courseCard.getAttribute('data-course-title') || 'Recommended Course';
+    const courseUrl = courseCard.getAttribute('data-course-url') || '#';
+    const courseNote = courseCard.getAttribute('data-course-note') || 'This course matches your current roadmap.';
+
+    // Remember the user's choice so the dashboard can surface it later.
+    localStorage.setItem('last_recommended_course', JSON.stringify({
+        title,
+        url: courseUrl,
+        note: courseNote,
+        clickedAt: new Date().toISOString()
+    }));
+
+    showCourseInsight(title, courseNote);
+
+    // Give the user immediate feedback and a clear path forward.
+    if (courseUrl && courseUrl !== '#') {
+        window.open(courseUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    // Add a small intelligent nudge based on the current page state.
+    if (apiBase) {
+        setTimeout(() => {
+            console.info(`Smart recommendation opened: ${title}`);
+        }, 0);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -84,12 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- API Integration Section ---
-    // Use a relative `/api` path in production (works when frontend is
-    // served from Vercel and the backend is proxied). For local development
-    // detect localhost and forward to local backend on port 5000.
-    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-        ? 'http://localhost:5000/api'
-        : '/api';
+    const API_BASE = window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api';
 
     // Login Form
     const loginForm = document.getElementById('loginForm');
@@ -286,38 +314,26 @@ document.addEventListener('DOMContentLoaded', () => {
             // Not logged in, kick out to login page
             window.location.href = 'index.html';
         } else {
-            // Fetch Dashboard Data and Roadmap
-            Promise.all([
-                fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_BASE}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
-            ])
-                .then(async ([dashRes, roadRes]) => {
+            // Function to refresh dashboard data in real-time
+            async function refreshDashboardData() {
+                try {
+                    const [dashRes, roadRes] = await Promise.all([
+                        fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${API_BASE}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
+                    ]);
+
                     if (!dashRes.ok) {
                         localStorage.removeItem('token');
                         window.location.href = 'index.html';
                         throw new Error('Unauthorized');
                     }
+
                     const data = await dashRes.json();
                     const roadData = roadRes.ok ? await roadRes.json() : null;
 
                     if (data.user) {
                         const u = data.user;
-                        // Update Welcome Message
-                        const fname = u.name.split(' ')[0];
-                        const welcomeMsg = document.querySelector('.welcome-msg h1');
-                        if (welcomeMsg) welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
-
-                        // Update Top Right Avatar
-                        const avatar = document.querySelector('.avatar');
-                        if (avatar) avatar.textContent = u.name.substring(0, 2).toUpperCase();
-                        const userInfoName = document.querySelector('.user-info span:first-child');
-                        if (userInfoName) userInfoName.textContent = u.name;
-
-                        // Update Target Career
-                        const careerBadge = document.querySelector('.career-badge');
-                        if (careerBadge) careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || 'Not set'}`;
-
-                        // Update Readiness Score
+                        // Update Readiness Score (Real-time)
                         const rs = u.readiness_score || 0;
                         const readinessSpan = document.querySelector('.progress-value');
                         if (readinessSpan) readinessSpan.textContent = `${rs}%`;
@@ -326,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             progressCircle.style.background = `conic-gradient(var(--primary) ${rs * 3.6}deg, var(--bg-card) 0deg)`;
                         }
 
-                        // Populate Current Skills
+                        // Update Current Skills
                         const currentContainer = document.getElementById('currentSkillsContainer');
                         if (currentContainer) {
                             currentContainer.innerHTML = '';
@@ -339,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
 
-                        // Populate Completed Skills
+                        // Update Completed Skills
                         const completedContainer = document.getElementById('completedSkillsContainer');
                         if (completedContainer) {
                             completedContainer.innerHTML = '';
@@ -351,3 +367,241 @@ document.addEventListener('DOMContentLoaded', () => {
                                 completedContainer.innerHTML = '<span style="font-size: 0.85rem; color: var(--text-muted);">No completed modules yet.</span>';
                             }
                         }
+                        // Update Missing Skills & Roadmap
+                        const missingContainer = document.getElementById('missingSkillsContainer');
+                        const roadmapContainer = document.getElementById('roadmapTimelineContainer');
+
+                        if (roadData && roadData.roadmap && roadData.roadmap.generated_steps) {
+                            const steps = roadData.roadmap.generated_steps;
+
+                            if (missingContainer) {
+                                missingContainer.innerHTML = '';
+                                const allKnown = [...(u.skills || []), ...(u.completed_skills || [])];
+                                let missingFound = false;
+
+                                steps.forEach(step => {
+                                    if (!allKnown.includes(step.target_skill)) {
+                                        missingContainer.innerHTML += `<span class="tag tag-warning">${step.target_skill}</span>`;
+                                        missingFound = true;
+                                    }
+                                });
+
+                                if (!missingFound) {
+                                    missingContainer.innerHTML = '<span class="tag tag-success">All roadmap skills mastered!</span>';
+                                }
+                            }
+
+                            // Render Timeline
+                            if (roadmapContainer) {
+                                roadmapContainer.innerHTML = '';
+                                steps.forEach((step, index) => {
+                                    const isCompleted = (u.completed_skills || []).includes(step.target_skill);
+                                    const itemClass = isCompleted ? 'timeline-item completed' : 'timeline-item';
+                                    const titleColor = isCompleted ? '' : 'color: var(--primary);';
+
+                                    let actionHtml = '';
+                                    if (!isCompleted) {
+                                        actionHtml = `<button class="btn btn-primary start-module-btn" data-skill="${step.target_skill}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-top: 0.5rem;">Mark as Completed</button>`;
+                                    }
+
+                                    roadmapContainer.innerHTML += `
+                                        <div class="${itemClass}">
+                                            <div class="timeline-title" style="${titleColor}">Step ${index + 1}: ${step.module_title}</div>
+                                            <div class="timeline-desc">Target Skill: <strong>${step.target_skill}</strong>. ${step.description}</div>
+                                            ${actionHtml}
+                                        </div>
+                                    `;
+                                });
+
+                                // Re-attach events to completion buttons
+                                document.querySelectorAll('.start-module-btn').forEach(btn => {
+                                    btn.addEventListener('click', async (e) => {
+                                        const skillName = e.target.getAttribute('data-skill');
+                                        const originalText = e.target.textContent;
+                                        e.target.disabled = true;
+                                        e.target.textContent = 'Saving...';
+
+                                        try {
+                                            const res = await fetch(`${API_BASE}/student/mark-completed`, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Authorization': `Bearer ${token}`,
+                                                    'Content-Type': 'application/json'
+                                                },
+                                                body: JSON.stringify({ skill: skillName })
+                                            });
+                                            if (res.ok) {
+                                                const response = await res.json();
+                                                
+                                                // Show immediate success feedback
+                                                e.target.textContent = '✓ Completed!';
+                                                e.target.style.backgroundColor = 'var(--success)';
+                                                e.target.style.color = 'white';
+                                                
+                                                // Add pulse animation to readiness score
+                                                const readinessSpan = document.querySelector('.progress-value');
+                                                if (readinessSpan) {
+                                                    readinessSpan.style.animation = 'pulse 0.6s ease-out';
+                                                }
+                                                
+                                                // Refresh data immediately
+                                                setTimeout(async () => {
+                                                    await refreshDashboardData();
+                                                    
+                                                    // Show success message
+                                                    if (response.new_readiness_score !== undefined) {
+                                                        const notification = document.createElement('div');
+                                                        notification.textContent = `✓ Skill completed! Readiness: ${response.new_readiness_score}%`;
+                                                        notification.style.cssText = `
+                                                            position: fixed;
+                                                            top: 20px;
+                                                            right: 20px;
+                                                            background: var(--success);
+                                                            color: white;
+                                                            padding: 1rem 1.5rem;
+                                                            border-radius: 0.5rem;
+                                                            z-index: 1000;
+                                                            font-weight: 600;
+                                                            animation: slideIn 0.3s ease-out;
+                                                        `;
+                                                        document.body.appendChild(notification);
+                                                        
+                                                        setTimeout(() => {
+                                                            notification.style.animation = 'slideOut 0.3s ease-out forwards';
+                                                            setTimeout(() => notification.remove(), 300);
+                                                        }, 2000);
+                                                    }
+                                                }, 200);
+                                            } else {
+                                                alert("Failed to mark completed.");
+                                                e.target.disabled = false;
+                                                e.target.textContent = originalText;
+                                            }
+                                        } catch (err) {
+                                            console.error(err);
+                                            e.target.disabled = false;
+                                            e.target.textContent = originalText;
+                                        }
+                                    });
+                                });
+                            }
+                        } else {
+                            if (missingContainer) missingContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No analysis complete.</span>';
+                            if (roadmapContainer) roadmapContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">No active roadmap. Go to Analyze Skills.</div>';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error refreshing dashboard:', error);
+                }
+            }
+
+            // Initial load and auto-refresh every 3 seconds
+            refreshDashboardData();
+            setInterval(refreshDashboardData, 3000);
+
+            // One-time setup for static UI elements and event handlers
+            fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.user) {
+                        const u = data.user;
+                        // Set initial static info (only needed once)
+                        const fname = u.name.split(' ')[0];
+                        const welcomeMsg = document.querySelector('.welcome-msg h1');
+                        if (welcomeMsg) welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
+
+                        const avatar = document.querySelector('.avatar');
+                        if (avatar) avatar.textContent = u.name.substring(0, 2).toUpperCase();
+                        const userInfoName = document.querySelector('.user-info span:first-child');
+                        if (userInfoName) userInfoName.textContent = u.name;
+
+                        const careerBadge = document.querySelector('.career-badge');
+                        if (careerBadge) careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || 'Not set'}`;
+
+                        // Attach Logout Handler
+                        const logoutBtn = document.querySelector('a[href="index.html"]');
+                        if (logoutBtn && logoutBtn.textContent.includes('Logout')) {
+                            logoutBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                localStorage.removeItem('token');
+                                window.location.href = 'index.html';
+                            });
+                        }
+
+                        // Make course cards interactive (one-time setup)
+                        document.querySelectorAll('.course-card').forEach((card) => {
+                            card.style.cursor = 'pointer';
+                            card.setAttribute('role', 'button');
+                            card.setAttribute('tabindex', '0');
+
+                            const triggerOpen = () => openRecommendedCourse(card, API_BASE);
+
+                            card.addEventListener('click', (event) => {
+                                const clickedButton = event.target.closest('.start-course-btn');
+                                if (clickedButton || event.currentTarget === card) {
+                                    triggerOpen();
+                                }
+                            });
+
+                            card.addEventListener('keydown', (event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    triggerOpen();
+                                }
+                            });
+                        });
+
+                        const recommendedCourse = localStorage.getItem('last_recommended_course');
+                        if (recommendedCourse) {
+                            try {
+                                const parsed = JSON.parse(recommendedCourse);
+                                showCourseInsight(parsed.title, `${parsed.note} Last opened on ${new Date(parsed.clickedAt).toLocaleString()}.`);
+                            } catch (error) {
+                                // Ignore malformed stored state.
+                            }
+                        }
+                    }
+                })
+                .catch(console.error);
+        }
+    }
+
+    // Admin portal protection
+    if (isAdminPage()) {
+        const adminToken = localStorage.getItem('admin_token');
+        if (!adminToken) {
+            window.location.href = 'admin-login.html';
+            return;
+        }
+
+        const adminLogout = document.querySelector('a[data-admin-logout="true"]');
+        if (adminLogout) {
+            adminLogout.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_username');
+                window.location.href = 'admin-login.html';
+            });
+        }
+    }
+
+    if (isAdminLoginPage()) {
+        const adminToken = localStorage.getItem('admin_token');
+        if (adminToken) {
+            window.location.href = 'admin.html';
+        }
+    }
+
+    // Global Logout Handler for all authenticated pages (Profile, Analyze, Progress, Admin)
+    if (!isDashboard) {
+        const globalLogout = document.querySelector('a[href="index.html"]');
+        if (globalLogout && globalLogout.textContent.includes('Logout')) {
+            globalLogout.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = 'index.html';
+            });
+        }
+    }
+
+});

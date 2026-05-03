@@ -1,0 +1,11 @@
+[tool.black]
+line-length = 88
+target-version = ['py39']
+exclude = '\\.(venv|venv64|env|venv36|venv37|venv38)\\/'
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

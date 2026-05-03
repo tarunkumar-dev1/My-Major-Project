@@ -1,35 +1,28 @@
 """
-Local run helper for the Flask application.
+Standalone server runner for local environments.
 
-This script exists to make it convenient to start the app in a local
-development environment in environments where importing from the package
-root may not be configured. It ensures `backend` is on the import path and
-starts the Flask app using the built-in server.
-
-Do not use this script in production. Use a WSGI server (gunicorn) that
-imports the `app` object from `backend.app` instead.
+This script ensures the `backend` package path is importable and starts the
+Flask app with environment-configurable host/port values.
 """
 
-import sys
 import os
+import sys
 
-# Ensure the package directory is on sys.path so `from app import create_app`
-# works even when this script is executed directly from the backend folder.
+# Ensure backend/ is importable when running this file directly.
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app import create_app
 
 
 def main():
-		"""Create and run the Flask development server.
+    """Create and run the Flask development server."""
+    app = create_app()
+    app.run(
+        debug=os.getenv("FLASK_DEBUG", "false").lower() == "true",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", "5000"))
+    )
 
-		- Debug is set to False here to match a simple local run; set to True
-			if you need the debugger and auto-reload locally.
-		- Host is bound to 127.0.0.1 to avoid exposing the dev server publicly.
-		"""
-		app = create_app()
-		app.run(debug=False, host='127.0.0.1', port=5000)
 
-
-if __name__ == '__main__':
-		main()
+if __name__ == "__main__":
+    main()
