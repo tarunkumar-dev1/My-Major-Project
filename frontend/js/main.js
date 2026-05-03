@@ -33,6 +33,30 @@ function isAdminLoginPage() {
     return window.location.pathname.endsWith("admin-login.html");
 }
 
+function bindPasswordVisibilityToggles() {
+    document.querySelectorAll(".password-toggle-btn").forEach((button) => {
+        const icon = button.querySelector("i");
+        button.addEventListener("click", () => {
+            const wrapper = button.closest(".password-input-wrapper");
+            if (!wrapper) return;
+            const passwordInput = wrapper.querySelector("input[type='password'], input[type='text']");
+            if (!passwordInput) return;
+
+            const isPassword = passwordInput.type === "password";
+            passwordInput.type = isPassword ? "text" : "password";
+
+            if (icon) {
+                icon.classList.toggle("ph-eye", !isPassword);
+                icon.classList.toggle("ph-eye-slash", isPassword);
+            }
+            button.setAttribute(
+                "aria-label",
+                isPassword ? "Hide password" : "Show password",
+            );
+        });
+    });
+}
+
 function isDashboardPage() {
     return window.location.pathname.endsWith("dashboard.html");
 }
@@ -91,6 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Theme Toggle
     const themeToggleBtn = document.getElementById("theme-toggle");
+    bindPasswordVisibilityToggles();
     if (themeToggleBtn) {
         // Set initial icon and text based on saved theme
         const icon = themeToggleBtn.querySelector("i");

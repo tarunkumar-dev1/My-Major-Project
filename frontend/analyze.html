@@ -184,15 +184,90 @@
             // Tagging Logic
             const skillInput = document.getElementById('skillInput');
             const tagsContainer = document.getElementById('skillTagsContainer');
+            const analyzeForm = document.getElementById('analyzeForm');
             let skills = [];
             let careersMap = {};
 
-            // Add predefined tags from user previous state if any (Optional enhancement)
+            function populateCareerDropdown(careers) {
+                if (!targetCareerSelect) return;
+
+                targetCareerSelect.innerHTML = '';
+                careersMap = {};
+
+                if (!careers || careers.length === 0) {
+                    const placeholder = document.createElement('option');
+                    placeholder.value = '';
+                    placeholder.textContent = 'No careers available';
+                    placeholder.disabled = true;
+                    targetCareerSelect.appendChild(placeholder);
+                    return;
+                }
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Select a career goal';
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                targetCareerSelect.appendChild(placeholder);
+
+                careers.forEach((career) => {
+                    const careerName = career.career_name || career.name || '';
+                    if (!careerName) return;
+                    careersMap[careerName] = career;
+
+                    const option = document.createElement('option');
+                    option.value = careerName;
+                    option.textContent = careerName;
+                    targetCareerSelect.appendChild(option);
+                });
+
+                targetCareerSelect.addEventListener('change', updateSuggestedSkills);
+                updateSuggestedSkills();
+            }
+
+            function addSkill(skill) {
+                const normalized = (skill || '').trim();
+                if (!normalized || skills.includes(normalized)) {
+                    return;
+                }
+                skills.push(normalized);
+                renderTags();
+            }
+
+            function updateSuggestedSkills() {
+                const selectedCareer = targetCareerSelect ? targetCareerSelect.value : '';
+                const careerHints = languageHintsByCareer[selectedCareer] || [];
+                const careerConfig = careersMap[selectedCareer] || {};
+                const requiredSkills = careerConfig.required_skills || [];
+
+                if (languageHintsText) {
+                    languageHintsText.textContent = careerHints.length
+                        ? `Start with: ${careerHints.join(', ')}`
+                        : 'Enter skills relevant to your selected career.';
+                }
+
+                if (suggestedSkillsContainer) {
+                    suggestedSkillsContainer.innerHTML = '';
+                    const skillSuggestions = requiredSkills.length
+                        ? requiredSkills.slice(0, 6)
+                        : Array.from(commonLanguages).slice(0, 6);
+
+                    skillSuggestions.forEach((skill) => {
+                        const badge = document.createElement('span');
+                        badge.className = 'tag';
+                        badge.textContent = skill;
+                        badge.style.cursor = 'pointer';
+                        badge.addEventListener('click', () => addSkill(skill));
+                        suggestedSkillsContainer.appendChild(badge);
+                    });
+                }
+            }
 
             function renderTags() {
-                // Remove all tags except the input
+                if (!tagsContainer) return;
+
                 const existingTags = tagsContainer.querySelectorAll('.tag');
-                existingTags.forEach(t => t.remove());
+                existingTags.forEach((t) => t.remove());
 
                 skills.forEach((skill, index) => {
                     const tag = document.createElement('span');
@@ -201,15 +276,78 @@
                     tagsContainer.insertBefore(tag, skillInput);
                 });
 
-                // Attach events to new delete buttons
-                tagsContainer.querySelectorAll('button[data-index]').forEach(btn => {
+                tagsContainer.querySelectorAll('button[data-index]').forEach((btn) => {
                     btn.addEventListener('click', (e) => {
-                        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+                        const idx = parseInt(e.currentTarget.getAttribute('data-index'), 10);
                         skills.splice(idx, 1);
                         renderTags();
                     });
                 });
             }
+
+            if (skillInput) {
+                skillInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSkill(skillInput.value);
+                        skillInput.value = '';
+                    }
+                });
+            }
+
+            if (analyzeForm) {
+                analyzeForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    const career_goal = targetCareerSelect ? targetCareerSelect.value : '';
+                    if (!career_goal) {
+                        alert('Please select a target career goal.');
+                        return;
+                    }
+
+                    if (!skills.length) {
+                        alert('Please add at least one skill before analyzing.');
+                        return;
+                    }
+
+                    const submitButton = analyzeForm.querySelector('button[type="submit"]');
+                    const originalText = submitButton ? submitButton.textContent : 'Submitting...';
+                    if (submitButton) {
+                        submitButton.textContent = 'Analyzing...';
+                        submitButton.disabled = true;
+                    }
+
+                    try {
+                        const response = await fetch(`${API_BASE}/student/submit-skills`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ skills, career_goal }),
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok) {
+                            throw new Error(result.error || 'Failed to analyze skills');
+                        }
+
+                        alert('Roadmap generation complete! Redirecting to your dashboard...');
+                        window.location.href = 'dashboard.html';
+                    } catch (err) {
+                        console.error(err);
+                        alert(err.message || 'There was a problem submitting your skills.');
+                    } finally {
+                        if (submitButton) {
+                            submitButton.textContent = originalText;
+                            submitButton.disabled = false;
+                        }
+                    }
+                });
+            }
+
+            // Initialize selection state
+            updateSuggestedSkills();
         });
     </script>
 </body>

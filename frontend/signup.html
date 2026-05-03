@@ -60,8 +60,13 @@
                     </div>
                     <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" class="form-control" placeholder="Create a password"
-                            required>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="password" class="form-control" placeholder="Create a password"
+                                required>
+                            <button type="button" class="password-toggle-btn" aria-label="Show password">
+                                <i class="ph ph-eye"></i>
+                            </button>
+                        </div>
                         <div style="margin-top: 0.35rem; font-size: 0.85rem; color: var(--text-secondary);">Use at least
                             8 characters with letters, numbers, and symbols.</div>
                     </div>
