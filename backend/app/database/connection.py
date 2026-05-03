@@ -9,8 +9,6 @@ is convenient for development and tests.
 
 import logging
 import bcrypt
-
-import mongomock
 from pymongo import MongoClient
 
 
@@ -46,6 +44,11 @@ def init_db(mongo_uri):
 
     # Ensure we have a client; use mongomock as a reliable fallback
     if client is None:
+        try:
+            import mongomock
+        except ImportError as exc:
+            logging.error("mongomock fallback requested, but mongomock is not installed: %s", exc)
+            raise
         client = mongomock.MongoClient()
         logging.info("Using mongomock in-memory database")
 
