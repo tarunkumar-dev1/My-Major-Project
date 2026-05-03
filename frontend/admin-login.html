@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - AI Skill Gap Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-illustration">
+                <i class="ph ph-shield-check" style="font-size: 120px; color: white; margin-bottom: 2rem;"></i>
+                <h2>Admin Portal</h2>
+                <p>Authorized administrators can review users, monitor analytics, and manage data.</p>
+            </div>
+            <div class="auth-form-container">
+                <div class="auth-header">
+                    <h1>Admin Sign In</h1>
+                    <p>Use the fixed admin credentials to access the portal.</p>
+                </div>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Admin Username</label>
+                        <input type="text" id="adminUsername" class="form-control" placeholder="Enter admin username"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password</label>
+                        <input type="password" id="adminPassword" class="form-control"
+                            placeholder="Enter admin password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Access Admin Portal</button>
+                </form>
+                <div style="margin-top: 0.75rem; display: flex; justify-content: center;">
+                    <button type="button" id="userProfileBtn" class="btn"
+                        style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">
+                        User Profile
+                    </button>
+                </div>
+                <div class="auth-footer">
+                    This portal is restricted to the configured admin account.
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/main.js?v=20260426"></script>
+</body>
+
+</html>
