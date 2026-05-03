@@ -33,13 +33,19 @@ function isAdminLoginPage() {
     return window.location.pathname.endsWith("admin-login.html");
 }
 
+function isProfilePage() {
+    return window.location.pathname.endsWith("profile.html");
+}
+
 function bindPasswordVisibilityToggles() {
     document.querySelectorAll(".password-toggle-btn").forEach((button) => {
         const icon = button.querySelector("i");
         button.addEventListener("click", () => {
             const wrapper = button.closest(".password-input-wrapper");
             if (!wrapper) return;
-            const passwordInput = wrapper.querySelector("input[type='password'], input[type='text']");
+            const passwordInput = wrapper.querySelector(
+                "input[type='password'], input[type='text']",
+            );
             if (!passwordInput) return;
 
             const isPassword = passwordInput.type === "password";
@@ -154,6 +160,249 @@ document.addEventListener("DOMContentLoaded", () => {
     const API_BASE =
         window.SKILLGAP_CONFIG?.API_BASE_URL ||
         "https://backendaiskillgap.tarunkumar17.me/api";
+
+    const isProfile = isProfilePage();
+    if (isProfile) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        const headerAvatar = document.getElementById("headerAvatar");
+        const headerName = document.getElementById("headerName");
+        const profileName = document.getElementById("profileName");
+        const profileEmail = document.getElementById("profileEmail");
+        const profileCareer = document.getElementById("profileCareer");
+        const mainAvatar = document.getElementById("mainAvatar");
+        const editName = document.getElementById("editName");
+        const editEmail = document.getElementById("editEmail");
+        const editCareer = document.getElementById("editCareer");
+        const editProfileBtn = document.getElementById("editProfileBtn");
+        const saveProfileBtn = document.getElementById("saveProfileBtn");
+        const profilePhotoInput = document.getElementById("profilePhotoInput");
+        const changePasswordBtn = document.getElementById("changePasswordBtn");
+        const passwordPanel = document.getElementById("passwordPanel");
+        const passwordChevron = document.getElementById("passwordChevron");
+        const savePasswordBtn = document.getElementById("savePasswordBtn");
+        const currentPassword = document.getElementById("currentPassword");
+        const newPassword = document.getElementById("newPassword");
+        const prefEmailNotifications = document.getElementById(
+            "prefEmailNotifications",
+        );
+        const prefPublicProfile = document.getElementById("prefPublicProfile");
+
+        let selectedPhotoData = null;
+
+        const setAvatarText = (name) => {
+            const initials = name
+                ? name
+                      .split(" ")
+                      .map((word) => word[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase()
+                : "--";
+
+            if (headerAvatar) headerAvatar.textContent = initials;
+            if (mainAvatar) {
+                if (selectedPhotoData) {
+                    mainAvatar.style.backgroundImage = `url(${selectedPhotoData})`;
+                    mainAvatar.style.backgroundSize = "cover";
+                    mainAvatar.style.backgroundPosition = "center";
+                    mainAvatar.textContent = "";
+                } else {
+                    mainAvatar.style.backgroundImage = "";
+                    mainAvatar.textContent = initials;
+                }
+            }
+        };
+
+        const setEditMode = (enabled) => {
+            if (editName) editName.disabled = !enabled;
+            if (editCareer) editCareer.disabled = !enabled;
+            if (saveProfileBtn)
+                saveProfileBtn.style.display = enabled ? "inline-flex" : "none";
+            if (editProfileBtn)
+                editProfileBtn.textContent = enabled
+                    ? "Cancel"
+                    : "Edit Profile";
+        };
+
+        const loadProfile = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/student/dashboard`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) {
+                    localStorage.removeItem("token");
+                    window.location.href = "index.html";
+                    return;
+                }
+                const data = await res.json();
+                const user = data.user || {};
+                const name = user.name || "User";
+                const email = user.email || "";
+                const career_goal = user.career_goal || "";
+                const readiness = user.readiness_score || 0;
+                const skillsCount = (user.skills || []).length;
+                const completedCount = (user.completed_skills || []).length;
+                const preferences = user.preferences || {};
+
+                if (headerName) headerName.textContent = name;
+                if (profileName) profileName.textContent = name;
+                if (profileEmail) profileEmail.textContent = email;
+                if (profileCareer)
+                    profileCareer.textContent = career_goal || "Not Set";
+                if (editName) editName.value = name;
+                if (editEmail) editEmail.value = email;
+                if (editCareer)
+                    editCareer.value =
+                        career_goal || editCareer.options[0]?.value || "";
+                if (prefEmailNotifications)
+                    prefEmailNotifications.checked = Boolean(
+                        preferences.email_notifications,
+                    );
+                if (prefPublicProfile)
+                    prefPublicProfile.checked = Boolean(
+                        preferences.public_profile,
+                    );
+                if (document.getElementById("statReadiness"))
+                    document.getElementById("statReadiness").textContent =
+                        `${readiness}%`;
+                if (document.getElementById("statSkills"))
+                    document.getElementById("statSkills").textContent =
+                        `${skillsCount}`;
+                if (document.getElementById("statCompleted"))
+                    document.getElementById("statCompleted").textContent =
+                        `${completedCount}`;
+                setAvatarText(name);
+                setEditMode(false);
+            } catch (err) {
+                console.error("Profile load failed", err);
+            }
+        };
+
+        if (profilePhotoInput) {
+            profilePhotoInput.addEventListener("change", async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                if (!file.type.startsWith("image/")) {
+                    alert("Please select a valid image file.");
+                    return;
+                }
+                selectedPhotoData = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () =>
+                        reject(new Error("Failed to read profile image."));
+                    reader.readAsDataURL(file);
+                });
+                setAvatarText(editName?.value || "");
+            });
+        }
+
+        if (editProfileBtn) {
+            editProfileBtn.addEventListener("click", () => {
+                const currentlyEditing = editName && !editName.disabled;
+                setEditMode(!currentlyEditing);
+            });
+        }
+
+        if (saveProfileBtn) {
+            saveProfileBtn.addEventListener("click", async () => {
+                const updates = {};
+                const nameValue = editName?.value.trim();
+                const careerValue = editCareer?.value || "";
+                if (nameValue) updates.name = nameValue;
+                if (careerValue) updates.career_goal = careerValue;
+                if (selectedPhotoData)
+                    updates.profile_photo = selectedPhotoData;
+                updates.preferences = {
+                    email_notifications: Boolean(
+                        prefEmailNotifications?.checked,
+                    ),
+                    public_profile: Boolean(prefPublicProfile?.checked),
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/student/profile`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(updates),
+                    });
+                    const result = await res.json();
+                    if (!res.ok)
+                        throw new Error(
+                            result.error || "Unable to save profile.",
+                        );
+                    alert(result.message || "Profile updated.");
+                    await loadProfile();
+                } catch (err) {
+                    console.error(err);
+                    alert(err.message || "Profile update failed.");
+                }
+            });
+        }
+
+        if (changePasswordBtn && passwordPanel && passwordChevron) {
+            changePasswordBtn.addEventListener("click", () => {
+                const isOpen = passwordPanel.style.display === "block";
+                passwordPanel.style.display = isOpen ? "none" : "block";
+                passwordChevron.classList.toggle("ph-caret-down", isOpen);
+                passwordChevron.classList.toggle("ph-caret-up", !isOpen);
+            });
+        }
+
+        if (savePasswordBtn) {
+            savePasswordBtn.addEventListener("click", async () => {
+                const currentValue = currentPassword?.value || "";
+                const newValue = newPassword?.value || "";
+                if (!currentValue || !newValue) {
+                    alert("Please fill both current and new passwords.");
+                    return;
+                }
+                if (!isStrongPassword(newValue)) {
+                    alert(
+                        "New password must be at least 8 characters long and include letters, numbers, and symbols.",
+                    );
+                    return;
+                }
+                try {
+                    const res = await fetch(
+                        `${API_BASE}/student/profile/password`,
+                        {
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                                current_password: currentValue,
+                                new_password: newValue,
+                            }),
+                        },
+                    );
+                    const result = await res.json();
+                    if (!res.ok)
+                        throw new Error(
+                            result.error || "Password change failed.",
+                        );
+                    alert(result.message || "Password updated successfully.");
+                    if (currentPassword) currentPassword.value = "";
+                    if (newPassword) newPassword.value = "";
+                } catch (err) {
+                    console.error(err);
+                    alert(err.message || "Password update failed.");
+                }
+            });
+        }
+
+        loadProfile();
+    }
 
     // Login Form
     const loginForm = document.getElementById("loginForm");
