@@ -5,7 +5,7 @@ This document provides a comprehensive overview of the AI-Based Skill Gap Analyz
 ---
 
 > [!NOTE]
-> This application leverages Python Flask for the backend, Vanilla HTML/CSS/JS for the frontend, MongoDB for data storage, and the Google Gemini LLM API to generate dynamic, personalized learning roadmaps based on a user's current skills and desired career goals.
+> This application leverages Python Flask for the backend, Vanilla HTML/CSS/JS for the frontend, MongoDB for data storage, and the Groq LLM API (`llama-3.3-70b-versatile`) to generate dynamic, personalized learning roadmaps based on a user's current skills and desired career goals.
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ This document provides a comprehensive overview of the AI-Based Skill Gap Analyz
 2. [Frontend Architecture (UI/UX)](#2-frontend-architecture-uiux)
 3. [Backend Architecture & API Endpoints](#3-backend-architecture--api-endpoints)
 4. [Database Structure](#4-database-structure)
-5. [AI Integration (Gemini)](#5-ai-integration-gemini)
+5. [AI Integration (Groq)](#5-ai-integration-groq)
 6. [Local Deployment Setup](#6-local-deployment-setup)
 
 ---
@@ -25,7 +25,7 @@ The project follows a standard decoupled Client-Server architecture:
 - **Frontend Client:** A lightweight, pure HTML/CSS/JS client relying completely on AJAX (Fetch API) requests for dynamic rendering. No templating engine (like Jinja) is restricting the UI.
 - **Backend API:** A RESTful backend built with **Flask** providing structured endpoints.
 - **Database Engine:** **MongoDB** documents, offering flexibility over user nested profile data and roadmap objects.
-- **External Service:** **Google Gemini API**, heavily utilized by the backend's AI Module logic to generate content based on complex skill comparisons.
+- **External Service:** **Groq API**, heavily utilized by the backend's AI Module logic to generate content based on complex skill comparisons.
 
 ---
 
@@ -61,7 +61,7 @@ The core logic lies in `/backend/app/`. The standard routing operates under an `
 > [!IMPORTANT]
 > All student endpoints require a Valid JWT sent via the `Authorization: Bearer <token>` header.
 
-- `POST /submit-skills`: Expects `{ "skills": [], "career_goal": "" }`. This is the heavy lifting endpoint that talks to the `AnalysisService`, identifies skill shortages, and talks to the `RoadmapService` (and thereby Google Gemini) to generate the learning modules.
+- `POST /submit-skills`: Expects `{ "skills": [], "career_goal": "" }`. This is the heavy lifting endpoint that talks to the `AnalysisService`, identifies skill shortages, and talks to the `RoadmapService` (and thereby Groq) to generate the learning modules.
 - `GET /dashboard`: Dispatches user profile and metadata (omitting the hashed password) used to load the dashboard.
 - `GET /roadmap`: Fetches the currently persisted AI roadmap linked to the specific student.
 - `POST /mark-completed`: Expects a `{ "skill": "" }` payload. Appends to the user's `completed_skills` array within MongoDB to update progress.
@@ -117,7 +117,7 @@ Stores baseline job-role assumptions defined by admins.
 
 ---
 
-## 5. AI Integration (Gemini)
+## 5. AI Integration (Groq)
 
 The system bypasses basic hardcoded "If-Else" roadmap routing by incorporating generative AI.
 
@@ -135,7 +135,7 @@ To bring up the environment, follow these sequences:
 
 - Python 3.9+
 - Activated local MongoDB Daemon (Running at `mongodb://localhost:27017` or configured via `.env`).
-- Environment configuration `GEMINI_API_KEY` for LLM integrations.
+- Environment configuration `GROQ_API_KEY` for LLM integrations.
 
 Note on local vs. production databases
 
@@ -149,7 +149,7 @@ Environment variables and secrets
 
 - Create a `backend/.env` (from `backend/.env.example`) and provide the
   following values for local development: `MONGO_URI`, `JWT_SECRET`,
-  `GEMINI_API_KEY`, `AI_MODEL_NAME`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
+  `GROQ_API_KEY`, `AI_MODEL_NAME`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`.
 - For production deployments set these environment variables in your host
   platform (Vercel/Railway). Do not embed secrets in frontend code or commit
   them to source control.

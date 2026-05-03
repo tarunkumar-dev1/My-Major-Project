@@ -41,7 +41,7 @@ copy backend\.env.example backend\.env
 
 - `MONGO_URI`
 - `JWT_SECRET`
-- `GEMINI_API_KEY`
+- `GROQ_API_KEY`
 - `AI_MODEL_NAME`
 - `FRONTEND_ORIGINS`
 - `ADMIN_USERNAME`

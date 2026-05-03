@@ -1,15 +1,23 @@
+import json
 import logging
 import threading
-import google.generativeai as genai
+import requests
 from config import Config
 
-# Initialize Gemini API
-if Config.GEMINI_API_KEY:
-    genai.configure(api_key=Config.GEMINI_API_KEY)
-    AI_ENABLED = True
-else:
-    logging.warning("GEMINI_API_KEY is not set. AI clustering will be disabled.")
-    AI_ENABLED = False
+AI_ENABLED = bool(Config.GROQ_API_KEY)
+GROQ_API_URL = "https://api.groq.com/v1/models/{model}/outputs"
+
+
+def _strip_json_output(text):
+    if not isinstance(text, str):
+        return text
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1]
+    if text.endswith("```"):
+        text = text.rsplit("\n", 1)[0]
+    return text.strip()
+
 
 def _call_with_timeout(func, timeout=10):
     """Calls a function with a timeout. Returns None if it times out or fails."""
@@ -28,11 +36,42 @@ def _call_with_timeout(func, timeout=10):
     thread.join(timeout)
 
     if thread.is_alive():
-        logging.warning(f"Gemini API call timed out after {timeout}s")
+        logging.warning(f"Groq API call timed out after {timeout}s")
         return None
     if error[0]:
         raise error[0]
     return result[0]
+
+
+def _call_groq_model(prompt, model_name, timeout_tokens=800):
+    url = GROQ_API_URL.format(model=model_name)
+    headers = {
+        "Authorization": f"Bearer {Config.GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "input": prompt,
+        "max_output_tokens": timeout_tokens,
+        "temperature": 0.2,
+    }
+    response = requests.post(url, headers=headers, json=payload, timeout=30)
+    response.raise_for_status()
+    body = response.json()
+
+    output = body.get("output")
+    if isinstance(output, list) and output:
+        first_output = output[0]
+        content = first_output.get("content")
+        if isinstance(content, list) and content:
+            for chunk in content:
+                if isinstance(chunk, dict) and "text" in chunk:
+                    return _strip_json_output(chunk["text"])
+                if isinstance(chunk, str):
+                    return _strip_json_output(chunk)
+    if isinstance(body.get("text"), str):
+        return _strip_json_output(body["text"])
+    return None
+
 
 class SimilarityEngine:
     _instance = None
@@ -48,80 +87,53 @@ class SimilarityEngine:
         self.ai_enabled = AI_ENABLED
         self.model_name = model_name
         if self.ai_enabled:
-            logging.info(f"Using Gemini Embeddings Model: {model_name}")
+            logging.info(f"Using Groq model: {model_name}")
         else:
             logging.warning("Initializing SimilarityEngine in Fallback Mode (No AI).")
-
-    def _cosine_similarity(self, v1, v2):
-        """Calculates cosine similarity between two vectors."""
-        dot_product = sum(a * b for a, b in zip(v1, v2))
-        magnitude1 = sum(a * a for a in v1) ** 0.5
-        magnitude2 = sum(b * b for b in v2) ** 0.5
-        if magnitude1 == 0 or magnitude2 == 0:
-            return 0
-        return dot_product / (magnitude1 * magnitude2)
 
     def calculate_similarity_matrix(self, user_skills, required_skills):
         """
         Takes a list of user skills and a list of required skills.
         Returns a matrix mapping what user skills roughly match what required skills
-        using Gemini Embeddings.
+        using Groq semantic scoring.
         """
         if not self.ai_enabled or not user_skills or not required_skills:
             return []
 
+        prompt = f"""
+You are a skill-matching assistant. Compare the student skills and required skills
+and return a JSON array of objects with the following keys:
+- required_skill
+- best_user_match
+- similarity_score
+
+Use a similarity_score between 0.0 and 1.0. Use the best matching user skill for each required skill.
+Return only valid JSON.
+
+User skills: {json.dumps(user_skills)}
+Required skills: {json.dumps(required_skills)}
+"""
+
         try:
-            # Generate embeddings with timeout to prevent hanging on rate limits
-            user_response = _call_with_timeout(
-                lambda: genai.embed_content(
-                    model=self.model_name,
-                    content=user_skills,
-                    task_type="SEMANTIC_SIMILARITY"
-                ),
-                timeout=15
+            response_text = _call_with_timeout(
+                lambda: _call_groq_model(prompt, self.model_name, timeout_tokens=700),
+                timeout=20,
             )
-            
-            if user_response is None:
-                logging.warning("Embedding call timed out for user skills. Falling back.")
+            if response_text is None:
+                logging.warning("Groq similarity call timed out. Falling back.")
                 return []
-            
-            req_response = _call_with_timeout(
-                lambda: genai.embed_content(
-                    model=self.model_name,
-                    content=required_skills,
-                    task_type="SEMANTIC_SIMILARITY"
-                ),
-                timeout=15
-            )
-            
-            if req_response is None:
-                logging.warning("Embedding call timed out for required skills. Falling back.")
-                return []
-            
-            user_embeddings = user_response['embedding']
-            req_embeddings = req_response['embedding']
-            
+
+            similarity_data = json.loads(response_text)
             matches = []
-            for i, req_skill in enumerate(required_skills):
-                best_score = -1
-                best_idx = -1
-                
-                # Compare against all user skills
-                for j, user_skill in enumerate(user_skills):
-                    score = self._cosine_similarity(user_embeddings[j], req_embeddings[i])
-                    if score > best_score:
-                        best_score = score
-                        best_idx = j
-                
+            for item in similarity_data:
                 matches.append({
-                    "required_skill": req_skill,
-                    "best_user_match": user_skills[best_idx],
-                    "similarity_score": round(best_score, 4)
+                    "required_skill": item.get("required_skill"),
+                    "best_user_match": item.get("best_user_match"),
+                    "similarity_score": float(item.get("similarity_score", 0.0)),
                 })
-                
             return matches
         except Exception as e:
-            logging.error(f"Failed to calculate similarity with Gemini API: {e}")
+            logging.error(f"Failed to calculate similarity with Groq API: {e}")
             return []
         
     def bridge_skill_gap(self, user_skills, required_skills, threshold=0.75):

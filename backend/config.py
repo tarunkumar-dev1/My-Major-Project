@@ -22,8 +22,8 @@ class Config:
     # JWT secret used to sign authentication tokens.
     JWT_SECRET = os.getenv("JWT_SECRET", "")
 
-    # API key for Gemini / Generative AI integrations.
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+    # API key for Groq integrations.
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
     # Frontend origin(s) for CORS. Use comma-separated values or "*".
     FRONTEND_ORIGINS = os.getenv("FRONTEND_ORIGINS", "*")
@@ -32,5 +32,5 @@ class Config:
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
 
-    # Name or identifier for embedding/model selection.
-    AI_MODEL_NAME = os.getenv("AI_MODEL_NAME", "models/gemini-embedding-001")
+    # Name or identifier for the AI model selection.
+    AI_MODEL_NAME = os.getenv("AI_MODEL_NAME", "llama-3.3-70b-versatile")
