@@ -35,9 +35,34 @@ class AuthService:
                 'iat': datetime.datetime.utcnow(),
                 'sub': str(user_id)
             }
-            return jwt.encode(payload, current_app.config['JWT_SECRET'], algorithm='HS256')
+            # Prefer Flask app config if available; fall back to env var if
+            # running outside of an application/request context (useful for
+            # background tasks or scripts).
+            secret = None
+            try:
+                secret = current_app.config.get('JWT_SECRET')
+            except RuntimeError:
+                # No application context; try environment variable
+                import os
+
+                secret = os.getenv('JWT_SECRET')
+
+            if not secret:
+                # If we cannot obtain a secret, log and return None so that
+                # registration still persists even when token issuance fails.
+                import logging
+
+                logging.warning('JWT secret not available; returning no token')
+                return None
+
+            return jwt.encode(payload, secret, algorithm='HS256')
         except Exception as e:
-            raise Exception(f"Error generating token: {str(e)}")
+            # Don't raise here — token generation failure should not prevent
+            # user creation. Log the error and return None.
+            import logging
+
+            logging.exception('Error generating JWT token: %s', e)
+            return None
 
     def hash_password(self, password):
         """Create a bcrypt salted hash for `password`."""
@@ -105,6 +130,13 @@ class AuthService:
         }
 
         result = self.users_collection.insert_one(new_user)
+        # Log the successful insertion for visibility during debugging.
+        try:
+            import logging
+
+            logging.info("New user inserted: %s into %s", result.inserted_id, self.db.name)
+        except Exception:
+            pass
         token = self.generate_token(result.inserted_id)
 
         return {

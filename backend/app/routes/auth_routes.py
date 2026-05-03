@@ -24,16 +24,22 @@ def signup():
     if not data or not data.get('email') or not data.get('password') or not data.get('name'):
         return jsonify({"error": "Missing required fields (name, email, password)"}), 400
 
-    auth_service = AuthService()
-    response, status_code = auth_service.register_user(
-        name=data.get('name'),
-        email=data.get('email'),
-        password=data.get('password'),
-        career_goal=data.get('career_goal'), # Optional at signup
-        profile_photo=data.get('profile_photo')
-    )
+    try:
+        auth_service = AuthService()
+        response, status_code = auth_service.register_user(
+            name=data.get('name'),
+            email=data.get('email'),
+            password=data.get('password'),
+            career_goal=data.get('career_goal'), # Optional at signup
+            profile_photo=data.get('profile_photo')
+        )
+        return jsonify(response), status_code
+    except Exception as e:
+        # Log unexpected server-side errors and return a 500 for debugging.
+        import logging
 
-    return jsonify(response), status_code
+        logging.exception('Error during signup: %s', e)
+        return jsonify({'error': 'Internal server error during signup'}), 500
 
 
 @auth_bp.route('/login', methods=['POST'])
