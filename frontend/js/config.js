@@ -9,14 +9,19 @@
   fallback with your Railway backend URL.
 */
 (function (global) {
-    const hostname = global.location && global.location.hostname ? global.location.hostname : '';
-    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const hostname =
+        global.location && global.location.hostname
+            ? global.location.hostname
+            : "";
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
 
-    const API_BASE_URL = global.SKILLGAP_API_BASE_URL || (
-        isLocalHost ? 'http://127.0.0.1:5000/api' : '/api'
-    );
+    const API_BASE_URL =
+        global.SKILLGAP_API_BASE_URL ||
+        (isLocalHost
+            ? "http://127.0.0.1:5000/api"
+            : "https://backendaiskillgap.tarunkumar17.me/api");
 
     global.SKILLGAP_CONFIG = Object.freeze({
-        API_BASE_URL: API_BASE_URL.replace(/\/$/, '')
+        API_BASE_URL: API_BASE_URL.replace(/\/$/, ""),
     });
 })(window);

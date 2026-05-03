@@ -11,6 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Progress - AI Skill Gap Analyzer</title>
+    <base href="/">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
@@ -310,9 +311,11 @@
                 return;
             }
 
+            const apiBase = window.SKILLGAP_CONFIG?.API_BASE_URL || 'https://backendaiskillgap.tarunkumar17.me/api';
+
             Promise.all([
-                fetch(`${window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api'}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api'}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`${apiBase}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${apiBase}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
             ])
                 .then(async ([dashRes, roadRes]) => {
                     if (!dashRes.ok) throw new Error('Unauthorized');

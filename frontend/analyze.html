@@ -11,6 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyze Skills - AI Skill Gap Analyzer</title>
+    <base href="/">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
@@ -128,7 +129,7 @@
     <script src="js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const API_BASE = window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api';
+            const API_BASE = window.SKILLGAP_CONFIG?.API_BASE_URL || 'https://backendaiskillgap.tarunkumar17.me/api';
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = 'index.html';

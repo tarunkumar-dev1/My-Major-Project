@@ -127,7 +127,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- API Integration Section ---
     const API_BASE =
-        window.SKILLGAP_CONFIG?.API_BASE_URL || "http://127.0.0.1:5000/api";
+        window.SKILLGAP_CONFIG?.API_BASE_URL ||
+        "https://backendaiskillgap.tarunkumar17.me/api";
 
     // Login Form
     const loginForm = document.getElementById("loginForm");
@@ -359,12 +360,81 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Dashboard Protection & Data Load ---
     const isDashboard = window.location.pathname.endsWith("dashboard.html");
     if (isDashboard) {
+        let dashboardStaticInitialized = false;
+
+        function initializeDashboardStaticUI(u) {
+            const fname = u.name.split(" ")[0];
+            const welcomeMsg = document.querySelector(".welcome-msg h1");
+            if (welcomeMsg) welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
+
+            const avatar = document.querySelector(".avatar");
+            if (avatar)
+                avatar.textContent = u.name.substring(0, 2).toUpperCase();
+            const userInfoName = document.querySelector(
+                ".user-info span:first-child",
+            );
+            if (userInfoName) userInfoName.textContent = u.name;
+
+            const careerBadge = document.querySelector(".career-badge");
+            if (careerBadge)
+                careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || "Not set"}`;
+
+            const logoutBtn = document.querySelector('a[href="index.html"]');
+            if (logoutBtn && logoutBtn.textContent.includes("Logout")) {
+                logoutBtn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem("token");
+                    window.location.href = "index.html";
+                });
+            }
+
+            document.querySelectorAll(".course-card").forEach((card) => {
+                card.style.cursor = "pointer";
+                card.setAttribute("role", "button");
+                card.setAttribute("tabindex", "0");
+
+                const triggerOpen = () => openRecommendedCourse(card, API_BASE);
+
+                card.addEventListener("click", (event) => {
+                    const clickedButton =
+                        event.target.closest(".start-course-btn");
+                    if (clickedButton || event.currentTarget === card) {
+                        triggerOpen();
+                    }
+                });
+
+                card.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        triggerOpen();
+                    }
+                });
+            });
+
+            const recommendedCourse = localStorage.getItem(
+                "last_recommended_course",
+            );
+            if (recommendedCourse) {
+                try {
+                    const parsed = JSON.parse(recommendedCourse);
+                    showCourseInsight(
+                        parsed.title,
+                        `${parsed.note} Last opened on ${new Date(
+                            parsed.clickedAt,
+                        ).toLocaleString()}.`,
+                    );
+                } catch (error) {
+                    // Ignore malformed stored state.
+                }
+            }
+        }
+
         const token = localStorage.getItem("token");
         if (!token) {
             // Not logged in, kick out to login page
             window.location.href = "index.html";
         } else {
-            // Function to refresh dashboard data in real-time
+            // Function to refresh dashboard data once
             async function refreshDashboardData() {
                 try {
                     const [dashRes, roadRes] = await Promise.all([
@@ -387,6 +457,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (data.user) {
                         const u = data.user;
+                        if (!dashboardStaticInitialized) {
+                            initializeDashboardStaticUI(u);
+                            dashboardStaticInitialized = true;
+                        }
+
                         // Update Readiness Score (Real-time)
                         const rs = u.readiness_score || 0;
                         const readinessSpan =
@@ -628,107 +703,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            // Initial load and auto-refresh every 3 seconds
+            // Initial load
             refreshDashboardData();
-            setInterval(refreshDashboardData, 3000);
 
-            // One-time setup for static UI elements and event handlers
-            fetch(`${API_BASE}/student/dashboard`, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    if (data.user) {
-                        const u = data.user;
-                        // Set initial static info (only needed once)
-                        const fname = u.name.split(" ")[0];
-                        const welcomeMsg =
-                            document.querySelector(".welcome-msg h1");
-                        if (welcomeMsg)
-                            welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
-
-                        const avatar = document.querySelector(".avatar");
-                        if (avatar)
-                            avatar.textContent = u.name
-                                .substring(0, 2)
-                                .toUpperCase();
-                        const userInfoName = document.querySelector(
-                            ".user-info span:first-child",
-                        );
-                        if (userInfoName) userInfoName.textContent = u.name;
-
-                        const careerBadge =
-                            document.querySelector(".career-badge");
-                        if (careerBadge)
-                            careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || "Not set"}`;
-
-                        // Attach Logout Handler
-                        const logoutBtn = document.querySelector(
-                            'a[href="index.html"]',
-                        );
-                        if (
-                            logoutBtn &&
-                            logoutBtn.textContent.includes("Logout")
-                        ) {
-                            logoutBtn.addEventListener("click", (e) => {
-                                e.preventDefault();
-                                localStorage.removeItem("token");
-                                window.location.href = "index.html";
-                            });
-                        }
-
-                        // Make course cards interactive (one-time setup)
-                        document
-                            .querySelectorAll(".course-card")
-                            .forEach((card) => {
-                                card.style.cursor = "pointer";
-                                card.setAttribute("role", "button");
-                                card.setAttribute("tabindex", "0");
-
-                                const triggerOpen = () =>
-                                    openRecommendedCourse(card, API_BASE);
-
-                                card.addEventListener("click", (event) => {
-                                    const clickedButton =
-                                        event.target.closest(
-                                            ".start-course-btn",
-                                        );
-                                    if (
-                                        clickedButton ||
-                                        event.currentTarget === card
-                                    ) {
-                                        triggerOpen();
-                                    }
-                                });
-
-                                card.addEventListener("keydown", (event) => {
-                                    if (
-                                        event.key === "Enter" ||
-                                        event.key === " "
-                                    ) {
-                                        event.preventDefault();
-                                        triggerOpen();
-                                    }
-                                });
-                            });
-
-                        const recommendedCourse = localStorage.getItem(
-                            "last_recommended_course",
-                        );
-                        if (recommendedCourse) {
-                            try {
-                                const parsed = JSON.parse(recommendedCourse);
-                                showCourseInsight(
-                                    parsed.title,
-                                    `${parsed.note} Last opened on ${new Date(parsed.clickedAt).toLocaleString()}.`,
-                                );
-                            } catch (error) {
-                                // Ignore malformed stored state.
-                            }
-                        }
-                    }
-                })
-                .catch(console.error);
+            // One-time setup for static UI elements and event handlers occurs inside refreshDashboardData.
         }
     }
 
