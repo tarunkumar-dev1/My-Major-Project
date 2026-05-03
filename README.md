@@ -58,8 +58,8 @@ Backend runs on `http://0.0.0.0:5000` by default.
 ## Frontend Behavior
 
 - `frontend/js/config.js` chooses API base URL:
-  - local: `http://127.0.0.1:5000/api`
-  - deployed: `/api`
+    - local: `http://127.0.0.1:5000/api`
+    - deployed: `/api`
 
 ## Deployment
 

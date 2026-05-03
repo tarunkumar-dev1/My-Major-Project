@@ -4,41 +4,43 @@
  */
 
 // Immediately apply the saved theme.
-const savedTheme = localStorage.getItem('theme') || 'light';
-if (savedTheme === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
+const savedTheme = localStorage.getItem("theme") || "light";
+if (savedTheme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
 }
 
 function isValidGmail(email) {
     // Validate that the provided email is a gmail address. This is a
     // lightweight client-side check for UX only; server-side must re-verify.
-    return /^[A-Za-z0-9._%+-]+@gmail\.com$/i.test((email || '').trim());
+    return /^[A-Za-z0-9._%+-]+@gmail\.com$/i.test((email || "").trim());
 }
 
 function isStrongPassword(password) {
-    return typeof password === 'string'
-        && password.length >= 8
-        && /[A-Za-z]/.test(password)
-        && /\d/.test(password)
-        && /[^A-Za-z0-9]/.test(password);
+    return (
+        typeof password === "string" &&
+        password.length >= 8 &&
+        /[A-Za-z]/.test(password) &&
+        /\d/.test(password) &&
+        /[^A-Za-z0-9]/.test(password)
+    );
 }
 
 function isAdminPage() {
-    return window.location.pathname.endsWith('admin.html');
+    return window.location.pathname.endsWith("admin.html");
 }
 
 function isAdminLoginPage() {
-    return window.location.pathname.endsWith('admin-login.html');
+    return window.location.pathname.endsWith("admin-login.html");
 }
 
 function isDashboardPage() {
-    return window.location.pathname.endsWith('dashboard.html');
+    return window.location.pathname.endsWith("dashboard.html");
 }
 
 function showCourseInsight(courseTitle, courseNote) {
-    const insightBanner = document.getElementById('courseInsightBanner');
-    const insightTitle = document.getElementById('courseInsightTitle');
-    const insightText = document.getElementById('courseInsightText');
+    const insightBanner = document.getElementById("courseInsightBanner");
+    const insightTitle = document.getElementById("courseInsightTitle");
+    const insightText = document.getElementById("courseInsightText");
 
     if (!insightBanner || !insightTitle || !insightText) {
         return;
@@ -46,27 +48,33 @@ function showCourseInsight(courseTitle, courseNote) {
 
     insightTitle.textContent = `Smart pick: ${courseTitle}`;
     insightText.textContent = courseNote;
-    insightBanner.style.display = 'block';
+    insightBanner.style.display = "block";
 }
 
 function openRecommendedCourse(courseCard, apiBase) {
-    const title = courseCard.getAttribute('data-course-title') || 'Recommended Course';
-    const courseUrl = courseCard.getAttribute('data-course-url') || '#';
-    const courseNote = courseCard.getAttribute('data-course-note') || 'This course matches your current roadmap.';
+    const title =
+        courseCard.getAttribute("data-course-title") || "Recommended Course";
+    const courseUrl = courseCard.getAttribute("data-course-url") || "#";
+    const courseNote =
+        courseCard.getAttribute("data-course-note") ||
+        "This course matches your current roadmap.";
 
     // Remember the user's choice so the dashboard can surface it later.
-    localStorage.setItem('last_recommended_course', JSON.stringify({
-        title,
-        url: courseUrl,
-        note: courseNote,
-        clickedAt: new Date().toISOString()
-    }));
+    localStorage.setItem(
+        "last_recommended_course",
+        JSON.stringify({
+            title,
+            url: courseUrl,
+            note: courseNote,
+            clickedAt: new Date().toISOString(),
+        }),
+    );
 
     showCourseInsight(title, courseNote);
 
     // Give the user immediate feedback and a clear path forward.
-    if (courseUrl && courseUrl !== '#') {
-        window.open(courseUrl, '_blank', 'noopener,noreferrer');
+    if (courseUrl && courseUrl !== "#") {
+        window.open(courseUrl, "_blank", "noopener,noreferrer");
     }
 
     // Add a small intelligent nudge based on the current page state.
@@ -77,67 +85,73 @@ function openRecommendedCourse(courseCard, apiBase) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     // Initialization entry: wire up UI elements and forms.
-    console.log('SkillGap Analyzer UI initialized');
+    console.log("SkillGap Analyzer UI initialized");
 
     // Theme Toggle
-    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeToggleBtn = document.getElementById("theme-toggle");
     if (themeToggleBtn) {
         // Set initial icon and text based on saved theme
-        const icon = themeToggleBtn.querySelector('i');
-        const pText = themeToggleBtn.querySelector('span');
-        if (savedTheme === 'dark') {
-            icon.classList.remove('ph-moon');
-            icon.classList.add('ph-sun');
-            pText.textContent = 'Light Mode';
+        const icon = themeToggleBtn.querySelector("i");
+        const pText = themeToggleBtn.querySelector("span");
+        if (savedTheme === "dark") {
+            icon.classList.remove("ph-moon");
+            icon.classList.add("ph-sun");
+            pText.textContent = "Light Mode";
         } else {
-            icon.classList.remove('ph-sun');
-            icon.classList.add('ph-moon');
-            pText.textContent = 'Dark Mode';
+            icon.classList.remove("ph-sun");
+            icon.classList.add("ph-moon");
+            pText.textContent = "Dark Mode";
         }
 
-        themeToggleBtn.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
+        themeToggleBtn.addEventListener("click", () => {
+            const currentTheme =
+                document.documentElement.getAttribute("data-theme") || "light";
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", newTheme);
+            localStorage.setItem("theme", newTheme);
 
             // Icon handling
-            if (newTheme === 'dark') {
-                icon.classList.remove('ph-moon');
-                icon.classList.add('ph-sun');
-                pText.textContent = 'Light Mode';
+            if (newTheme === "dark") {
+                icon.classList.remove("ph-moon");
+                icon.classList.add("ph-sun");
+                pText.textContent = "Light Mode";
             } else {
-                icon.classList.remove('ph-sun');
-                icon.classList.add('ph-moon');
-                pText.textContent = 'Dark Mode';
+                icon.classList.remove("ph-sun");
+                icon.classList.add("ph-moon");
+                pText.textContent = "Dark Mode";
             }
         });
     }
 
     // --- API Integration Section ---
-    const API_BASE = window.SKILLGAP_CONFIG?.API_BASE_URL || 'http://127.0.0.1:5000/api';
+    const API_BASE =
+        window.SKILLGAP_CONFIG?.API_BASE_URL || "http://127.0.0.1:5000/api";
 
     // Login Form
-    const loginForm = document.getElementById('loginForm');
+    const loginForm = document.getElementById("loginForm");
     if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
+        loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const btn = loginForm.querySelector('button');
+            const btn = loginForm.querySelector("button");
             const originalText = btn.textContent;
-            btn.textContent = 'Loading...';
+            btn.textContent = "Loading...";
             btn.disabled = true;
 
-            const emailField = loginForm.querySelector('#loginEmail') || loginForm.querySelector('#email');
-            const passwordField = loginForm.querySelector('#loginPassword') || loginForm.querySelector('#password');
+            const emailField =
+                loginForm.querySelector("#loginEmail") ||
+                loginForm.querySelector("#email");
+            const passwordField =
+                loginForm.querySelector("#loginPassword") ||
+                loginForm.querySelector("#password");
             // Collect values from the form fields. We trim/validate on the
             // client side for better UX but always validate on the server.
-            const email = emailField ? emailField.value : '';
-            const password = passwordField ? passwordField.value : '';
+            const email = emailField ? emailField.value : "";
+            const password = passwordField ? passwordField.value : "";
 
             if (!isValidGmail(email)) {
-                alert('Please enter a valid Gmail address.');
+                alert("Please enter a valid Gmail address.");
                 btn.textContent = originalText;
                 btn.disabled = false;
                 return;
@@ -145,26 +159,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const res = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
                 });
                 const data = await res.json();
                 if (res.ok) {
                     // Persist the token in localStorage to keep the example simple.
                     // NOTE: Storing JWTs in localStorage exposes them to XSS; for
                     // production prefer secure, HTTP-only cookies.
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('last_user_token', data.token);
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("last_user_token", data.token);
                     if (email) {
-                        localStorage.setItem('last_user_email', email);
+                        localStorage.setItem("last_user_email", email);
                     }
-                    window.location.href = 'dashboard.html';
+                    window.location.href = "dashboard.html";
                 } else {
-                    alert('Login failed: ' + (data.error || 'Invalid credentials'));
+                    alert(
+                        "Login failed: " +
+                            (data.error || "Invalid credentials"),
+                    );
                 }
             } catch (err) {
-                alert('Network error. Is the backend running?');
+                alert("Network error. Is the backend running?");
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
@@ -173,37 +190,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Signup Form
-    const signupForm = document.getElementById('signupForm');
+    const signupForm = document.getElementById("signupForm");
     if (signupForm) {
-        signupForm.addEventListener('submit', async (e) => {
+        signupForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const btn = signupForm.querySelector('button');
+            const btn = signupForm.querySelector("button");
             const originalText = btn.textContent;
-            btn.textContent = 'Loading...';
+            btn.textContent = "Loading...";
             btn.disabled = true;
 
-            const nameField = signupForm.querySelector('#signupName') || signupForm.querySelector('#name');
-            const emailField = signupForm.querySelector('#signupEmail') || signupForm.querySelector('#email');
-            const passwordField = signupForm.querySelector('#signupPassword') || signupForm.querySelector('#password');
-            const careerField = signupForm.querySelector('#signupCareer') || signupForm.querySelector('#career');
-            const photoField = signupForm.querySelector('#profilePhoto');
+            const nameField =
+                signupForm.querySelector("#signupName") ||
+                signupForm.querySelector("#name");
+            const emailField =
+                signupForm.querySelector("#signupEmail") ||
+                signupForm.querySelector("#email");
+            const passwordField =
+                signupForm.querySelector("#signupPassword") ||
+                signupForm.querySelector("#password");
+            const careerField =
+                signupForm.querySelector("#signupCareer") ||
+                signupForm.querySelector("#career");
+            const photoField = signupForm.querySelector("#profilePhoto");
 
             // Gather form inputs
-            const name = nameField ? nameField.value : '';
-            const email = emailField ? emailField.value : '';
-            const password = passwordField ? passwordField.value : '';
-            const career_goal = careerField ? careerField.value : '';
+            const name = nameField ? nameField.value : "";
+            const email = emailField ? emailField.value : "";
+            const password = passwordField ? passwordField.value : "";
+            const career_goal = careerField ? careerField.value : "";
             let profile_photo = null;
 
             if (!isValidGmail(email)) {
-                alert('Only valid Gmail addresses are allowed.');
+                alert("Only valid Gmail addresses are allowed.");
                 btn.textContent = originalText;
                 btn.disabled = false;
                 return;
             }
 
             if (!isStrongPassword(password)) {
-                alert('Password must be at least 8 characters long and include letters, numbers, and symbols.');
+                alert(
+                    "Password must be at least 8 characters long and include letters, numbers, and symbols.",
+                );
                 btn.textContent = originalText;
                 btn.disabled = false;
                 return;
@@ -211,8 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (photoField && photoField.files && photoField.files[0]) {
                 const file = photoField.files[0];
-                if (!file.type.startsWith('image/')) {
-                    alert('Please choose an image file for your profile photo.');
+                if (!file.type.startsWith("image/")) {
+                    alert(
+                        "Please choose an image file for your profile photo.",
+                    );
                     btn.textContent = originalText;
                     btn.disabled = false;
                     return;
@@ -221,28 +250,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 profile_photo = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve(reader.result);
-                    reader.onerror = () => reject(new Error('Failed to read profile photo.'));
+                    reader.onerror = () =>
+                        reject(new Error("Failed to read profile photo."));
                     reader.readAsDataURL(file);
                 });
             }
 
             try {
                 const res = await fetch(`${API_BASE}/auth/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password, career_goal, profile_photo })
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        career_goal,
+                        profile_photo,
+                    }),
                 });
                 const data = await res.json();
                 if (res.ok) {
                     // On success, suggest the user log in. Consider auto-login
                     // flows in the future but avoid exposing credentials.
-                    alert('Account successfully created! Please log in to continue.');
-                    window.location.href = 'index.html';
+                    alert(
+                        "Account successfully created! Please log in to continue.",
+                    );
+                    window.location.href = "index.html";
                 } else {
-                    alert('Signup failed: ' + (data.error || 'Unknown error'));
+                    alert("Signup failed: " + (data.error || "Unknown error"));
                 }
             } catch (err) {
-                alert('Network error. Is the backend running?');
+                alert("Network error. Is the backend running?");
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
@@ -251,40 +289,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Admin Login Form
-    const adminLoginForm = document.getElementById('adminLoginForm');
-    const userProfileBtn = document.getElementById('userProfileBtn');
+    const adminLoginForm = document.getElementById("adminLoginForm");
+    const userProfileBtn = document.getElementById("userProfileBtn");
     if (adminLoginForm) {
-        adminLoginForm.addEventListener('submit', async (e) => {
+        adminLoginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const btn = adminLoginForm.querySelector('button');
+            const btn = adminLoginForm.querySelector("button");
             const originalText = btn.textContent;
-            btn.textContent = 'Verifying...';
+            btn.textContent = "Verifying...";
             btn.disabled = true;
 
-            const usernameField = adminLoginForm.querySelector('#adminUsername');
-            const passwordField = adminLoginForm.querySelector('#adminPassword');
-            const username = usernameField ? usernameField.value.trim() : '';
-            const password = passwordField ? passwordField.value : '';
+            const usernameField =
+                adminLoginForm.querySelector("#adminUsername");
+            const passwordField =
+                adminLoginForm.querySelector("#adminPassword");
+            const username = usernameField ? usernameField.value.trim() : "";
+            const password = passwordField ? passwordField.value : "";
 
             try {
                 const res = await fetch(`${API_BASE}/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password }),
                 });
                 const data = await res.json();
 
                 if (res.ok) {
-                    localStorage.setItem('admin_token', data.token);
+                    localStorage.setItem("admin_token", data.token);
                     if (data.admin && data.admin.username) {
-                        localStorage.setItem('admin_username', data.admin.username);
+                        localStorage.setItem(
+                            "admin_username",
+                            data.admin.username,
+                        );
                     }
-                    window.location.href = 'admin.html';
+                    window.location.href = "admin.html";
                 } else {
-                    alert('Admin login failed: ' + (data.error || 'Invalid credentials'));
+                    alert(
+                        "Admin login failed: " +
+                            (data.error || "Invalid credentials"),
+                    );
                 }
             } catch (err) {
-                alert('Network error. Is the backend running?');
+                alert("Network error. Is the backend running?");
             } finally {
                 btn.textContent = originalText;
                 btn.disabled = false;
@@ -293,39 +339,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (userProfileBtn) {
-        userProfileBtn.addEventListener('click', () => {
-            const lastUserToken = localStorage.getItem('last_user_token') || localStorage.getItem('token');
+        userProfileBtn.addEventListener("click", () => {
+            const lastUserToken =
+                localStorage.getItem("last_user_token") ||
+                localStorage.getItem("token");
             if (!lastUserToken) {
-                alert('No previous user profile found. Please log in as a user first.');
-                window.location.href = 'index.html';
+                alert(
+                    "No previous user profile found. Please log in as a user first.",
+                );
+                window.location.href = "index.html";
                 return;
             }
 
-            localStorage.setItem('token', lastUserToken);
-            window.location.href = 'profile.html';
+            localStorage.setItem("token", lastUserToken);
+            window.location.href = "profile.html";
         });
     }
 
     // --- Dashboard Protection & Data Load ---
-    const isDashboard = window.location.pathname.endsWith('dashboard.html');
+    const isDashboard = window.location.pathname.endsWith("dashboard.html");
     if (isDashboard) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) {
             // Not logged in, kick out to login page
-            window.location.href = 'index.html';
+            window.location.href = "index.html";
         } else {
             // Function to refresh dashboard data in real-time
             async function refreshDashboardData() {
                 try {
                     const [dashRes, roadRes] = await Promise.all([
-                        fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                        fetch(`${API_BASE}/student/roadmap`, { headers: { 'Authorization': `Bearer ${token}` } })
+                        fetch(`${API_BASE}/student/dashboard`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        }),
+                        fetch(`${API_BASE}/student/roadmap`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        }),
                     ]);
 
                     if (!dashRes.ok) {
-                        localStorage.removeItem('token');
-                        window.location.href = 'index.html';
-                        throw new Error('Unauthorized');
+                        localStorage.removeItem("token");
+                        window.location.href = "index.html";
+                        throw new Error("Unauthorized");
                     }
 
                     const data = await dashRes.json();
@@ -335,51 +389,73 @@ document.addEventListener('DOMContentLoaded', () => {
                         const u = data.user;
                         // Update Readiness Score (Real-time)
                         const rs = u.readiness_score || 0;
-                        const readinessSpan = document.querySelector('.progress-value');
+                        const readinessSpan =
+                            document.querySelector(".progress-value");
                         if (readinessSpan) readinessSpan.textContent = `${rs}%`;
-                        const progressCircle = document.querySelector('.circular-progress');
+                        const progressCircle =
+                            document.querySelector(".circular-progress");
                         if (progressCircle) {
                             progressCircle.style.background = `conic-gradient(var(--primary) ${rs * 3.6}deg, var(--bg-card) 0deg)`;
                         }
 
                         // Update Current Skills
-                        const currentContainer = document.getElementById('currentSkillsContainer');
+                        const currentContainer = document.getElementById(
+                            "currentSkillsContainer",
+                        );
                         if (currentContainer) {
-                            currentContainer.innerHTML = '';
+                            currentContainer.innerHTML = "";
                             if (u.skills && u.skills.length > 0) {
-                                u.skills.forEach(skill => {
+                                u.skills.forEach((skill) => {
                                     currentContainer.innerHTML += `<span class="tag tag-success">${skill}</span>`;
                                 });
                             } else {
-                                currentContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No skills logged yet.</span>';
+                                currentContainer.innerHTML =
+                                    '<span style="color: var(--text-muted); font-size: 0.85rem;">No skills logged yet.</span>';
                             }
                         }
 
                         // Update Completed Skills
-                        const completedContainer = document.getElementById('completedSkillsContainer');
+                        const completedContainer = document.getElementById(
+                            "completedSkillsContainer",
+                        );
                         if (completedContainer) {
-                            completedContainer.innerHTML = '';
-                            if (u.completed_skills && u.completed_skills.length > 0) {
-                                u.completed_skills.forEach(skill => {
+                            completedContainer.innerHTML = "";
+                            if (
+                                u.completed_skills &&
+                                u.completed_skills.length > 0
+                            ) {
+                                u.completed_skills.forEach((skill) => {
                                     completedContainer.innerHTML += `<span class="tag tag-success">${skill}</span>`;
                                 });
                             } else {
-                                completedContainer.innerHTML = '<span style="font-size: 0.85rem; color: var(--text-muted);">No completed modules yet.</span>';
+                                completedContainer.innerHTML =
+                                    '<span style="font-size: 0.85rem; color: var(--text-muted);">No completed modules yet.</span>';
                             }
                         }
                         // Update Missing Skills & Roadmap
-                        const missingContainer = document.getElementById('missingSkillsContainer');
-                        const roadmapContainer = document.getElementById('roadmapTimelineContainer');
+                        const missingContainer = document.getElementById(
+                            "missingSkillsContainer",
+                        );
+                        const roadmapContainer = document.getElementById(
+                            "roadmapTimelineContainer",
+                        );
 
-                        if (roadData && roadData.roadmap && roadData.roadmap.generated_steps) {
+                        if (
+                            roadData &&
+                            roadData.roadmap &&
+                            roadData.roadmap.generated_steps
+                        ) {
                             const steps = roadData.roadmap.generated_steps;
 
                             if (missingContainer) {
-                                missingContainer.innerHTML = '';
-                                const allKnown = [...(u.skills || []), ...(u.completed_skills || [])];
+                                missingContainer.innerHTML = "";
+                                const allKnown = [
+                                    ...(u.skills || []),
+                                    ...(u.completed_skills || []),
+                                ];
                                 let missingFound = false;
 
-                                steps.forEach(step => {
+                                steps.forEach((step) => {
                                     if (!allKnown.includes(step.target_skill)) {
                                         missingContainer.innerHTML += `<span class="tag tag-warning">${step.target_skill}</span>`;
                                         missingFound = true;
@@ -387,19 +463,26 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
 
                                 if (!missingFound) {
-                                    missingContainer.innerHTML = '<span class="tag tag-success">All roadmap skills mastered!</span>';
+                                    missingContainer.innerHTML =
+                                        '<span class="tag tag-success">All roadmap skills mastered!</span>';
                                 }
                             }
 
                             // Render Timeline
                             if (roadmapContainer) {
-                                roadmapContainer.innerHTML = '';
+                                roadmapContainer.innerHTML = "";
                                 steps.forEach((step, index) => {
-                                    const isCompleted = (u.completed_skills || []).includes(step.target_skill);
-                                    const itemClass = isCompleted ? 'timeline-item completed' : 'timeline-item';
-                                    const titleColor = isCompleted ? '' : 'color: var(--primary);';
+                                    const isCompleted = (
+                                        u.completed_skills || []
+                                    ).includes(step.target_skill);
+                                    const itemClass = isCompleted
+                                        ? "timeline-item completed"
+                                        : "timeline-item";
+                                    const titleColor = isCompleted
+                                        ? ""
+                                        : "color: var(--primary);";
 
-                                    let actionHtml = '';
+                                    let actionHtml = "";
                                     if (!isCompleted) {
                                         actionHtml = `<button class="btn btn-primary start-module-btn" data-skill="${step.target_skill}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-top: 0.5rem;">Mark as Completed</button>`;
                                     }
@@ -414,45 +497,76 @@ document.addEventListener('DOMContentLoaded', () => {
                                 });
 
                                 // Re-attach events to completion buttons
-                                document.querySelectorAll('.start-module-btn').forEach(btn => {
-                                    btn.addEventListener('click', async (e) => {
-                                        const skillName = e.target.getAttribute('data-skill');
-                                        const originalText = e.target.textContent;
-                                        e.target.disabled = true;
-                                        e.target.textContent = 'Saving...';
+                                document
+                                    .querySelectorAll(".start-module-btn")
+                                    .forEach((btn) => {
+                                        btn.addEventListener(
+                                            "click",
+                                            async (e) => {
+                                                const skillName =
+                                                    e.target.getAttribute(
+                                                        "data-skill",
+                                                    );
+                                                const originalText =
+                                                    e.target.textContent;
+                                                e.target.disabled = true;
+                                                e.target.textContent =
+                                                    "Saving...";
 
-                                        try {
-                                            const res = await fetch(`${API_BASE}/student/mark-completed`, {
-                                                method: 'POST',
-                                                headers: {
-                                                    'Authorization': `Bearer ${token}`,
-                                                    'Content-Type': 'application/json'
-                                                },
-                                                body: JSON.stringify({ skill: skillName })
-                                            });
-                                            if (res.ok) {
-                                                const response = await res.json();
-                                                
-                                                // Show immediate success feedback
-                                                e.target.textContent = '✓ Completed!';
-                                                e.target.style.backgroundColor = 'var(--success)';
-                                                e.target.style.color = 'white';
-                                                
-                                                // Add pulse animation to readiness score
-                                                const readinessSpan = document.querySelector('.progress-value');
-                                                if (readinessSpan) {
-                                                    readinessSpan.style.animation = 'pulse 0.6s ease-out';
-                                                }
-                                                
-                                                // Refresh data immediately
-                                                setTimeout(async () => {
-                                                    await refreshDashboardData();
-                                                    
-                                                    // Show success message
-                                                    if (response.new_readiness_score !== undefined) {
-                                                        const notification = document.createElement('div');
-                                                        notification.textContent = `✓ Skill completed! Readiness: ${response.new_readiness_score}%`;
-                                                        notification.style.cssText = `
+                                                try {
+                                                    const res = await fetch(
+                                                        `${API_BASE}/student/mark-completed`,
+                                                        {
+                                                            method: "POST",
+                                                            headers: {
+                                                                Authorization: `Bearer ${token}`,
+                                                                "Content-Type":
+                                                                    "application/json",
+                                                            },
+                                                            body: JSON.stringify(
+                                                                {
+                                                                    skill: skillName,
+                                                                },
+                                                            ),
+                                                        },
+                                                    );
+                                                    if (res.ok) {
+                                                        const response =
+                                                            await res.json();
+
+                                                        // Show immediate success feedback
+                                                        e.target.textContent =
+                                                            "✓ Completed!";
+                                                        e.target.style.backgroundColor =
+                                                            "var(--success)";
+                                                        e.target.style.color =
+                                                            "white";
+
+                                                        // Add pulse animation to readiness score
+                                                        const readinessSpan =
+                                                            document.querySelector(
+                                                                ".progress-value",
+                                                            );
+                                                        if (readinessSpan) {
+                                                            readinessSpan.style.animation =
+                                                                "pulse 0.6s ease-out";
+                                                        }
+
+                                                        // Refresh data immediately
+                                                        setTimeout(async () => {
+                                                            await refreshDashboardData();
+
+                                                            // Show success message
+                                                            if (
+                                                                response.new_readiness_score !==
+                                                                undefined
+                                                            ) {
+                                                                const notification =
+                                                                    document.createElement(
+                                                                        "div",
+                                                                    );
+                                                                notification.textContent = `✓ Skill completed! Readiness: ${response.new_readiness_score}%`;
+                                                                notification.style.cssText = `
                                                             position: fixed;
                                                             top: 20px;
                                                             right: 20px;
@@ -464,34 +578,53 @@ document.addEventListener('DOMContentLoaded', () => {
                                                             font-weight: 600;
                                                             animation: slideIn 0.3s ease-out;
                                                         `;
-                                                        document.body.appendChild(notification);
-                                                        
-                                                        setTimeout(() => {
-                                                            notification.style.animation = 'slideOut 0.3s ease-out forwards';
-                                                            setTimeout(() => notification.remove(), 300);
-                                                        }, 2000);
+                                                                document.body.appendChild(
+                                                                    notification,
+                                                                );
+
+                                                                setTimeout(
+                                                                    () => {
+                                                                        notification.style.animation =
+                                                                            "slideOut 0.3s ease-out forwards";
+                                                                        setTimeout(
+                                                                            () =>
+                                                                                notification.remove(),
+                                                                            300,
+                                                                        );
+                                                                    },
+                                                                    2000,
+                                                                );
+                                                            }
+                                                        }, 200);
+                                                    } else {
+                                                        alert(
+                                                            "Failed to mark completed.",
+                                                        );
+                                                        e.target.disabled = false;
+                                                        e.target.textContent =
+                                                            originalText;
                                                     }
-                                                }, 200);
-                                            } else {
-                                                alert("Failed to mark completed.");
-                                                e.target.disabled = false;
-                                                e.target.textContent = originalText;
-                                            }
-                                        } catch (err) {
-                                            console.error(err);
-                                            e.target.disabled = false;
-                                            e.target.textContent = originalText;
-                                        }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    e.target.disabled = false;
+                                                    e.target.textContent =
+                                                        originalText;
+                                                }
+                                            },
+                                        );
                                     });
-                                });
                             }
                         } else {
-                            if (missingContainer) missingContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No analysis complete.</span>';
-                            if (roadmapContainer) roadmapContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">No active roadmap. Go to Analyze Skills.</div>';
+                            if (missingContainer)
+                                missingContainer.innerHTML =
+                                    '<span style="color: var(--text-muted); font-size: 0.85rem;">No analysis complete.</span>';
+                            if (roadmapContainer)
+                                roadmapContainer.innerHTML =
+                                    '<div style="text-align: center; color: var(--text-muted); padding: 2rem;">No active roadmap. Go to Analyze Skills.</div>';
                         }
                     }
                 } catch (error) {
-                    console.error('Error refreshing dashboard:', error);
+                    console.error("Error refreshing dashboard:", error);
                 }
             }
 
@@ -500,62 +633,95 @@ document.addEventListener('DOMContentLoaded', () => {
             setInterval(refreshDashboardData, 3000);
 
             // One-time setup for static UI elements and event handlers
-            fetch(`${API_BASE}/student/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } })
-                .then(res => res.json())
-                .then(data => {
+            fetch(`${API_BASE}/student/dashboard`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+                .then((res) => res.json())
+                .then((data) => {
                     if (data.user) {
                         const u = data.user;
                         // Set initial static info (only needed once)
-                        const fname = u.name.split(' ')[0];
-                        const welcomeMsg = document.querySelector('.welcome-msg h1');
-                        if (welcomeMsg) welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
+                        const fname = u.name.split(" ")[0];
+                        const welcomeMsg =
+                            document.querySelector(".welcome-msg h1");
+                        if (welcomeMsg)
+                            welcomeMsg.innerHTML = `Welcome back, ${fname}! 👋`;
 
-                        const avatar = document.querySelector('.avatar');
-                        if (avatar) avatar.textContent = u.name.substring(0, 2).toUpperCase();
-                        const userInfoName = document.querySelector('.user-info span:first-child');
+                        const avatar = document.querySelector(".avatar");
+                        if (avatar)
+                            avatar.textContent = u.name
+                                .substring(0, 2)
+                                .toUpperCase();
+                        const userInfoName = document.querySelector(
+                            ".user-info span:first-child",
+                        );
                         if (userInfoName) userInfoName.textContent = u.name;
 
-                        const careerBadge = document.querySelector('.career-badge');
-                        if (careerBadge) careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || 'Not set'}`;
+                        const careerBadge =
+                            document.querySelector(".career-badge");
+                        if (careerBadge)
+                            careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || "Not set"}`;
 
                         // Attach Logout Handler
-                        const logoutBtn = document.querySelector('a[href="index.html"]');
-                        if (logoutBtn && logoutBtn.textContent.includes('Logout')) {
-                            logoutBtn.addEventListener('click', (e) => {
+                        const logoutBtn = document.querySelector(
+                            'a[href="index.html"]',
+                        );
+                        if (
+                            logoutBtn &&
+                            logoutBtn.textContent.includes("Logout")
+                        ) {
+                            logoutBtn.addEventListener("click", (e) => {
                                 e.preventDefault();
-                                localStorage.removeItem('token');
-                                window.location.href = 'index.html';
+                                localStorage.removeItem("token");
+                                window.location.href = "index.html";
                             });
                         }
 
                         // Make course cards interactive (one-time setup)
-                        document.querySelectorAll('.course-card').forEach((card) => {
-                            card.style.cursor = 'pointer';
-                            card.setAttribute('role', 'button');
-                            card.setAttribute('tabindex', '0');
+                        document
+                            .querySelectorAll(".course-card")
+                            .forEach((card) => {
+                                card.style.cursor = "pointer";
+                                card.setAttribute("role", "button");
+                                card.setAttribute("tabindex", "0");
 
-                            const triggerOpen = () => openRecommendedCourse(card, API_BASE);
+                                const triggerOpen = () =>
+                                    openRecommendedCourse(card, API_BASE);
 
-                            card.addEventListener('click', (event) => {
-                                const clickedButton = event.target.closest('.start-course-btn');
-                                if (clickedButton || event.currentTarget === card) {
-                                    triggerOpen();
-                                }
+                                card.addEventListener("click", (event) => {
+                                    const clickedButton =
+                                        event.target.closest(
+                                            ".start-course-btn",
+                                        );
+                                    if (
+                                        clickedButton ||
+                                        event.currentTarget === card
+                                    ) {
+                                        triggerOpen();
+                                    }
+                                });
+
+                                card.addEventListener("keydown", (event) => {
+                                    if (
+                                        event.key === "Enter" ||
+                                        event.key === " "
+                                    ) {
+                                        event.preventDefault();
+                                        triggerOpen();
+                                    }
+                                });
                             });
 
-                            card.addEventListener('keydown', (event) => {
-                                if (event.key === 'Enter' || event.key === ' ') {
-                                    event.preventDefault();
-                                    triggerOpen();
-                                }
-                            });
-                        });
-
-                        const recommendedCourse = localStorage.getItem('last_recommended_course');
+                        const recommendedCourse = localStorage.getItem(
+                            "last_recommended_course",
+                        );
                         if (recommendedCourse) {
                             try {
                                 const parsed = JSON.parse(recommendedCourse);
-                                showCourseInsight(parsed.title, `${parsed.note} Last opened on ${new Date(parsed.clickedAt).toLocaleString()}.`);
+                                showCourseInsight(
+                                    parsed.title,
+                                    `${parsed.note} Last opened on ${new Date(parsed.clickedAt).toLocaleString()}.`,
+                                );
                             } catch (error) {
                                 // Ignore malformed stored state.
                             }
@@ -568,40 +734,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Admin portal protection
     if (isAdminPage()) {
-        const adminToken = localStorage.getItem('admin_token');
+        const adminToken = localStorage.getItem("admin_token");
         if (!adminToken) {
-            window.location.href = 'admin-login.html';
+            window.location.href = "admin-login.html";
             return;
         }
 
-        const adminLogout = document.querySelector('a[data-admin-logout="true"]');
+        const adminLogout = document.querySelector(
+            'a[data-admin-logout="true"]',
+        );
         if (adminLogout) {
-            adminLogout.addEventListener('click', (e) => {
+            adminLogout.addEventListener("click", (e) => {
                 e.preventDefault();
-                localStorage.removeItem('admin_token');
-                localStorage.removeItem('admin_username');
-                window.location.href = 'admin-login.html';
+                localStorage.removeItem("admin_token");
+                localStorage.removeItem("admin_username");
+                window.location.href = "admin-login.html";
             });
         }
     }
 
     if (isAdminLoginPage()) {
-        const adminToken = localStorage.getItem('admin_token');
+        const adminToken = localStorage.getItem("admin_token");
         if (adminToken) {
-            window.location.href = 'admin.html';
+            window.location.href = "admin.html";
         }
     }
 
     // Global Logout Handler for all authenticated pages (Profile, Analyze, Progress, Admin)
     if (!isDashboard) {
         const globalLogout = document.querySelector('a[href="index.html"]');
-        if (globalLogout && globalLogout.textContent.includes('Logout')) {
-            globalLogout.addEventListener('click', (e) => {
+        if (globalLogout && globalLogout.textContent.includes("Logout")) {
+            globalLogout.addEventListener("click", (e) => {
                 e.preventDefault();
-                localStorage.removeItem('token');
-                window.location.href = 'index.html';
+                localStorage.removeItem("token");
+                window.location.href = "index.html";
             });
         }
     }
-
 });
