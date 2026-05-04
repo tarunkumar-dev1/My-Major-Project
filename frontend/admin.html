@@ -4,14 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - AI Skill Gap Analyzer</title>
+    <title>AISkillGap - AI Skill Gap Analyzer</title>
     <base href="./">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 
 <body>
-    <div class="app-container">
+    <div id="adminLoginSection" class="auth-container" style="display: block; visibility: visible;">
+        <div class="auth-card">
+            <div class="auth-illustration">
+                <i class="ph ph-shield-check" style="font-size: 120px; color: white; margin-bottom: 2rem;"></i>
+                <h2>Admin Access</h2>
+                <p>Sign in with the configured admin email and password to open the dashboard.</p>
+            </div>
+            <div class="auth-form-container">
+                <div class="auth-header">
+                    <h1>Admin Sign In</h1>
+                    <p>Enter the admin credentials to continue.</p>
+                </div>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminUsername">Admin Email</label>
+                        <input type="email" id="adminUsername" class="form-control" placeholder="Enter admin email"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="adminPassword" class="form-control"
+                                placeholder="Enter admin password" required>
+                            <button type="button" class="password-toggle-btn" aria-label="Show password">
+                                <i class="ph ph-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Access Admin Dashboard</button>
+                </form>
+                <div class="auth-footer">
+                    Only the configured admin account can sign in here.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminDashboardShell" class="app-container" style="display: none; visibility: hidden;">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
@@ -20,9 +57,9 @@
             </div>
             <nav class="sidebar-nav" style="display: flex; flex-direction: column; height: 100%;">
                 <div style="flex: 1;">
-                    <a href="dashboard.html" class="nav-link">
-                        <i class="ph ph-squares-four"></i>
-                        <span>Dashboard</span>
+                    <a href="admin.html" class="nav-link active">
+                        <i class="ph ph-shield-check"></i>
+                        <span>Admin Dashboard</span>
                     </a>
                     <style>
                         .stats-grid {
@@ -104,22 +141,6 @@
                             }
                         }
                     </style>
-                    <a href="analyze.html" class="nav-link">
-                        <i class="ph ph-target"></i>
-                        <span>Analyze Skills</span>
-                    </a>
-                    <a href="progress.html" class="nav-link">
-                        <i class="ph ph-chart-line-up"></i>
-                        <span>Progress</span>
-                    </a>
-                    <a href="#" class="nav-link">
-                        <i class="ph ph-user"></i>
-                        <span>Profile</span>
-                    </a>
-                    <a href="admin.html" class="nav-link active">
-                        <i class="ph ph-shield-check"></i>
-                        <span>Admin</span>
-                    </a>
                 </div>
                 <div style="margin-top: auto;">
                     <button class="nav-link" id="theme-toggle"
@@ -127,11 +148,11 @@
                         <i class="ph ph-moon"></i>
                         <span>Dark Mode</span>
                     </button>
-                    <a href="admin-login.html" class="nav-link" data-admin-logout="true"
-                        style="color: #EF4444; margin-top: 0.5rem;">
+                    <button type="button" class="nav-link" data-admin-logout="true"
+                        style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left; color: #EF4444; margin-top: 0.5rem;">
                         <i class="ph ph-sign-out"></i>
                         <span>Logout</span>
-                    </a>
+                    </button>
                 </div>
             </nav>
         </aside>
@@ -143,11 +164,13 @@
                     <i class="ph ph-magnifying-glass" style="color: var(--text-muted);"></i>
                     <input type="text" placeholder="Search system logs, users...">
                 </div>
-                <div class="user-profile">
-                    <div class="avatar" style="background: var(--text-primary); color: var(--bg-main);">A</div>
-                    <div class="user-info" style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 600; font-size: 0.9rem;">System Admin</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Superuser</span>
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <div class="user-profile">
+                        <div class="avatar" style="background: var(--text-primary); color: var(--bg-main);">A</div>
+                        <div class="user-info" style="display: flex; flex-direction: column;">
+                            <span style="font-weight: 600; font-size: 0.9rem;">System Admin</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Superuser</span>
+                        </div>
                     </div>
                 </div>
             </header>

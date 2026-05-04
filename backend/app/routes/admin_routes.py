@@ -8,6 +8,7 @@ with a proper admin user collection for production.
 """
 
 import datetime
+import os
 import jwt
 from functools import wraps
 from flask import Blueprint, request, jsonify, current_app
@@ -56,11 +57,19 @@ def admin_login():
     credentials in production.
     """
     data = request.get_json() or {}
-    username = (data.get('username') or '').strip()
-    password = data.get('password') or ''
+    username = (data.get('username') or '').strip().lower()
+    password = (data.get('password') or '').strip()
 
-    expected_username = current_app.config['ADMIN_USERNAME']
-    expected_password = current_app.config['ADMIN_PASSWORD']
+    expected_username = (
+        current_app.config.get('ADMIN_USERNAME')
+        or os.getenv('ADMIN_USERNAME')
+        or ''
+    ).strip().lower()
+    expected_password = (
+        current_app.config.get('ADMIN_PASSWORD')
+        or os.getenv('ADMIN_PASSWORD')
+        or ''
+    ).strip()
 
     if username != expected_username or password != expected_password:
         return jsonify({'error': 'Invalid admin credentials'}), 401

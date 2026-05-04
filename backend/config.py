@@ -7,10 +7,13 @@ Sensitive values should be provided through environment variables.
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Load local environment variables from backend/.env when present.
-load_dotenv()
+# Resolve the path explicitly so the app works even when launched from the
+# repository root instead of the backend directory.
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env")
 
 
 class Config:

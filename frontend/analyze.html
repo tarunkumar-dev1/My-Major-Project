@@ -10,7 +10,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analyze Skills - AI Skill Gap Analyzer</title>
+    <title>AISkillGap - AI Skill Gap Analyzer</title>
+    <meta name="description"
+        content="AISkillGap — personalized AI-driven skill gap analysis and learning roadmaps for tech careers.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <base href="./">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -188,6 +191,8 @@
             const tagsContainer = document.getElementById('skillTagsContainer');
             const analyzeForm = document.getElementById('analyzeForm');
             let skills = [];
+            // track lower-cased skills for case-insensitive duplicate checks
+            let skillsLower = new Set();
             let careersMap = {};
 
             function populateCareerDropdown(careers, defaultCareerGoal = '') {
@@ -246,11 +251,13 @@
 
             function addSkill(skill) {
                 const normalized = (skill || '').trim();
-                if (!normalized || skills.includes(normalized)) {
-                    return;
-                }
+                if (!normalized) return;
+                const lower = normalized.toLowerCase();
+                if (skillsLower.has(lower)) return;
                 skills.push(normalized);
+                skillsLower.add(lower);
                 renderTags();
+                try { updateSuggestedSkills(); } catch (e) { /* ignore */ }
             }
 
             function updateSuggestedSkills() {
@@ -276,14 +283,26 @@
                         ? requiredSkills.slice(0, 6)
                         : Array.from(commonLanguages).slice(0, 6);
 
-                    skillSuggestions.forEach((skill) => {
-                        const badge = document.createElement('span');
-                        badge.className = 'tag';
-                        badge.textContent = skill;
-                        badge.style.cursor = 'pointer';
-                        badge.addEventListener('click', () => addSkill(skill));
-                        suggestedSkillsContainer.appendChild(badge);
-                    });
+                    // filter out already added skills (case-insensitive)
+                    const existingLower = new Set(skills.map(s => s.toLowerCase()));
+                    const filtered = skillSuggestions.filter(s => !existingLower.has(s.toLowerCase()));
+
+                    if (filtered.length === 0) {
+                        const note = document.createElement('div');
+                        note.style.color = 'var(--text-secondary)';
+                        note.style.fontSize = '0.9rem';
+                        note.textContent = 'No additional suggestions.';
+                        suggestedSkillsContainer.appendChild(note);
+                    } else {
+                        filtered.forEach((skill) => {
+                            const badge = document.createElement('button');
+                            badge.className = 'tag suggested-badge';
+                            badge.type = 'button';
+                            badge.textContent = skill;
+                            badge.addEventListener('click', () => addSkill(skill));
+                            suggestedSkillsContainer.appendChild(badge);
+                        });
+                    }
                 }
             }
 
@@ -295,18 +314,28 @@
 
                 skills.forEach((skill, index) => {
                     const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.innerHTML = `${skill} <button type="button" data-index="${index}"><i class="ph ph-x"></i></button>`;
+                    tag.className = 'tag tag-enter';
+                    const btnId = `remove-skill-${index}`;
+                    tag.innerHTML = `<span class="tag-label">${skill}</span><button type="button" aria-label="Remove ${skill}" data-index="${index}" id="${btnId}"><i class="ph ph-x"></i></button>`;
                     tagsContainer.insertBefore(tag, skillInput);
                 });
 
+                // Attach remove handlers and maintain lowercase set
                 tagsContainer.querySelectorAll('button[data-index]').forEach((btn) => {
                     btn.addEventListener('click', (e) => {
                         const idx = parseInt(e.currentTarget.getAttribute('data-index'), 10);
-                        skills.splice(idx, 1);
+                        const removed = skills.splice(idx, 1);
+                        if (removed && removed[0]) {
+                            skillsLower.delete(removed[0].toLowerCase());
+                        }
                         renderTags();
+                        try { updateSuggestedSkills(); } catch (err) { }
                     });
                 });
+                // remove animation class after it plays so re-adding animates again
+                setTimeout(() => {
+                    tagsContainer.querySelectorAll('.tag-enter').forEach(el => el.classList.remove('tag-enter'));
+                }, 350);
             }
 
             if (skillInput) {
@@ -314,6 +343,16 @@
                     if (e.key === 'Enter') {
                         e.preventDefault();
                         addSkill(skillInput.value);
+                        skillInput.value = '';
+                        try { updateSuggestedSkills(); } catch (err) { }
+                    }
+                });
+                // support comma-separated paste or input
+                skillInput.addEventListener('blur', (e) => {
+                    const v = (skillInput.value || '').trim();
+                    if (v) {
+                        // split on comma to allow pasting multiple
+                        v.split(',').forEach(s => addSkill(s));
                         skillInput.value = '';
                     }
                 });

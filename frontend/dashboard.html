@@ -10,7 +10,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - AI Skill Gap Analyzer</title>
+    <title>AISkillGap - AI Skill Gap Analyzer</title>
+    <meta name="description"
+        content="AISkillGap — personalized AI-driven skill gap analysis and learning roadmaps for tech careers.">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <base href="./">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -53,10 +56,11 @@
                         <i class="ph ph-moon"></i>
                         <span>Dark Mode</span>
                     </button>
-                    <a href="index.html" class="nav-link" style="color: #EF4444; margin-top: 0.5rem;">
+                    <button type="button" class="nav-link" id="logout-btn"
+                        style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left; color: #EF4444; margin-top: 0.5rem;">
                         <i class="ph ph-sign-out"></i>
                         <span>Logout</span>
-                    </a>
+                    </button>
                 </div>
             </nav>
         </aside>
@@ -141,9 +145,9 @@
                                 </div>
                             </div>
                         </div>
-                        <p
+                        <p id="readinessMessage"
                             style="text-align: center; margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
-                            You're almost there! Master 2 key skills to reach 80%.
+                            Loading readiness summary...
                         </p>
                     </div>
                 </div>

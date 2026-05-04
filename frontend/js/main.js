@@ -25,7 +25,12 @@ function isStrongPassword(password) {
 }
 
 function isAdminPage() {
-    return window.location.pathname.endsWith("admin.html");
+    const pathname = window.location.pathname;
+    return (
+        pathname.includes("admin.html") ||
+        (typeof window !== "undefined" &&
+            window.location.href.includes("admin.html"))
+    );
 }
 
 function isAdminLoginPage() {
@@ -118,6 +123,51 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialization entry: wire up UI elements and forms.
     console.log("SkillGap Analyzer UI initialized");
 
+    const sidebar = document.querySelector(".sidebar");
+    const sidebarLogo = document.querySelector(".sidebar-logo");
+    const savedSidebarState =
+        localStorage.getItem("sidebar_collapsed") === "true";
+
+    if (
+        sidebar &&
+        sidebarLogo &&
+        !document.getElementById("sidebarCollapseToggle")
+    ) {
+        const toggleButton = document.createElement("button");
+        toggleButton.type = "button";
+        toggleButton.id = "sidebarCollapseToggle";
+        toggleButton.className = "sidebar-collapse-toggle";
+        toggleButton.setAttribute("aria-label", "Toggle sidebar");
+        toggleButton.innerHTML = '<i class="ph ph-list"></i>';
+        sidebarLogo.appendChild(toggleButton);
+
+        const applySidebarState = (collapsed) => {
+            document.body.classList.toggle("sidebar-collapsed", collapsed);
+            localStorage.setItem("sidebar_collapsed", String(collapsed));
+            toggleButton.setAttribute(
+                "aria-label",
+                collapsed ? "Expand sidebar" : "Collapse sidebar",
+            );
+        };
+
+        applySidebarState(savedSidebarState);
+        toggleButton.addEventListener("click", () => {
+            applySidebarState(
+                !document.body.classList.contains("sidebar-collapsed"),
+            );
+        });
+
+        // Preserve readable labels for the expanded state and native hints for the collapsed state.
+        document
+            .querySelectorAll(
+                ".sidebar .nav-link, .sidebar .sidebar-logo, .sidebar .nav-link button",
+            )
+            .forEach((el) => {
+                const text = el.querySelector("span")?.textContent?.trim();
+                if (text) el.setAttribute("title", text);
+            });
+    }
+
     // Theme Toggle
     const themeToggleBtn = document.getElementById("theme-toggle");
     bindPasswordVisibilityToggles();
@@ -159,6 +209,46 @@ document.addEventListener("DOMContentLoaded", () => {
     const API_BASE =
         window.SKILLGAP_CONFIG?.API_BASE_URL ||
         "https://backendaiskillgap.tarunkumar17.me/api";
+
+    // Sidebar visibility rules:
+    // - On regular user pages, hide only the Admin tab.
+    // - On the admin dashboard page, show only the Admin dashboard entry.
+    (function enforceSidebarVisibility() {
+        const userToken = localStorage.getItem("token");
+        const adminToken = localStorage.getItem("admin_token");
+        const adminPage = isAdminPage();
+
+        // Hide admin links for regular users on user-facing pages.
+        if (userToken && !adminPage) {
+            document
+                .querySelectorAll(
+                    'a[href="admin-login.html"], a[href="admin.html"]',
+                )
+                .forEach((el) => {
+                    el.style.display = "none";
+                });
+        }
+
+        // On the admin dashboard, restrict the visible navigation to the
+        // admin dashboard entry only.
+        if (adminToken && adminPage) {
+            document.querySelectorAll(".sidebar .nav-link").forEach((el) => {
+                const href = el.getAttribute("href") || "";
+                if (href !== "admin.html" && href !== "#") {
+                    el.style.display = "none";
+                } else if (href === "admin.html") {
+                    el.classList.add("active");
+                }
+            });
+
+            // Hide theme toggle and logout for admin view (optional clarity)
+            const themeToggle = document.getElementById("theme-toggle");
+            if (themeToggle) themeToggle.style.display = "none";
+            document
+                .querySelectorAll('a[href="index.html"]')
+                .forEach((el) => (el.style.display = "none"));
+        }
+    })();
 
     const isProfile = isProfilePage();
     if (isProfile) {
@@ -652,8 +742,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (careerBadge)
                 careerBadge.innerHTML = `<i class="ph-fill ph-code"></i> Target: ${u.career_goal || "Not set"}`;
 
-            const logoutBtn = document.querySelector('a[href="index.html"]');
-            if (logoutBtn && logoutBtn.textContent.includes("Logout")) {
+            const logoutBtn = document.getElementById("logout-btn");
+            if (logoutBtn) {
                 logoutBtn.addEventListener("click", (e) => {
                     e.preventDefault();
                     localStorage.removeItem("token");
@@ -741,6 +831,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             document.querySelector(".progress-value");
                         const readinessLabel =
                             document.querySelector(".progress-label");
+                        const readinessMessage =
+                            document.getElementById("readinessMessage");
                         if (readinessSpan) readinessSpan.textContent = `${rs}%`;
                         if (readinessLabel) {
                             readinessLabel.textContent =
@@ -812,17 +904,34 @@ document.addEventListener("DOMContentLoaded", () => {
                                     ...(u.completed_skills || []),
                                 ];
                                 let missingFound = false;
+                                let missingCount = 0;
 
                                 steps.forEach((step) => {
                                     if (!allKnown.includes(step.target_skill)) {
                                         missingContainer.innerHTML += `<span class="tag tag-warning">${step.target_skill}</span>`;
                                         missingFound = true;
+                                        missingCount += 1;
                                     }
                                 });
 
                                 if (!missingFound) {
                                     missingContainer.innerHTML =
                                         '<span class="tag tag-success">All roadmap skills mastered!</span>';
+                                }
+
+                                if (readinessMessage) {
+                                    if (rs >= 100 || missingCount === 0) {
+                                        readinessMessage.textContent =
+                                            "Great job! You have mastered the current roadmap.";
+                                    } else if (rs >= 80) {
+                                        readinessMessage.textContent = `You're almost there! Master ${missingCount} more skill${missingCount === 1 ? "" : "s"} to reach full readiness.`;
+                                    } else {
+                                        const remainingToTarget = Math.max(
+                                            0,
+                                            80 - rs,
+                                        );
+                                        readinessMessage.textContent = `You're building momentum. Master ${missingCount} skill${missingCount === 1 ? "" : "s"} and gain ${remainingToTarget}% more readiness to reach 80%.`;
+                                    }
                                 }
                             }
 
@@ -996,22 +1105,63 @@ document.addEventListener("DOMContentLoaded", () => {
     // Admin portal protection
     if (isAdminPage()) {
         const adminToken = localStorage.getItem("admin_token");
+        const adminLoginSection = document.getElementById("adminLoginSection");
+        const adminDashboardShell = document.getElementById(
+            "adminDashboardShell",
+        );
+
+        // Force visibility settings to ensure proper display
+        if (adminLoginSection) {
+            adminLoginSection.style.display = "none";
+            adminLoginSection.style.visibility = "hidden";
+            adminLoginSection.style.position = "absolute";
+            adminLoginSection.style.zIndex = "-1";
+        }
+        if (adminDashboardShell) {
+            adminDashboardShell.style.display = "none";
+            adminDashboardShell.style.visibility = "hidden";
+            adminDashboardShell.style.position = "absolute";
+            adminDashboardShell.style.zIndex = "-1";
+        }
+
         if (!adminToken) {
-            window.location.href = "admin-login.html";
+            // Show login form
+            if (adminLoginSection) {
+                adminLoginSection.style.display = "block";
+                adminLoginSection.style.visibility = "visible";
+                adminLoginSection.style.position = "static";
+                adminLoginSection.style.zIndex = "auto";
+            }
+            if (adminDashboardShell) {
+                adminDashboardShell.style.display = "none";
+                adminDashboardShell.style.visibility = "hidden";
+            }
             return;
         }
 
-        const adminLogout = document.querySelector(
-            'a[data-admin-logout="true"]',
+        // Show dashboard
+        if (adminLoginSection) {
+            adminLoginSection.style.display = "none";
+            adminLoginSection.style.visibility = "hidden";
+        }
+        if (adminDashboardShell) {
+            adminDashboardShell.style.display = "flex";
+            adminDashboardShell.style.visibility = "visible";
+            adminDashboardShell.style.position = "static";
+            adminDashboardShell.style.zIndex = "auto";
+        }
+
+        const adminLogoutButtons = document.querySelectorAll(
+            'a[data-admin-logout="true"], button[data-admin-logout="true"]',
         );
-        if (adminLogout) {
-            adminLogout.addEventListener("click", (e) => {
+        adminLogoutButtons.forEach((button) => {
+            button.addEventListener("click", (e) => {
                 e.preventDefault();
                 localStorage.removeItem("admin_token");
                 localStorage.removeItem("admin_username");
                 window.location.href = "admin-login.html";
             });
-        }
+        });
 
         // Fetch admin dashboard data and populate the UI
         (async function loadAdminData() {
