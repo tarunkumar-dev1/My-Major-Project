@@ -732,19 +732,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (userProfileBtn) {
         userProfileBtn.addEventListener("click", () => {
-            const lastUserToken =
-                localStorage.getItem("last_user_token") ||
-                localStorage.getItem("token");
-            if (!lastUserToken) {
-                alert(
-                    "No previous user profile found. Please log in as a user first.",
-                );
-                window.location.href = "index.html";
-                return;
-            }
-
-            localStorage.setItem("token", lastUserToken);
-            window.location.href = "profile.html";
+            localStorage.removeItem("token");
+            localStorage.removeItem("last_user_token");
+            window.location.href = "index.html";
         });
     }
 
