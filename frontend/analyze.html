@@ -11,7 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyze Skills - AI Skill Gap Analyzer</title>
-    <base href="/">
+    <base href="./">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
@@ -156,6 +156,7 @@
             const suggestedTitle = document.getElementById('suggestedTitle');
             const languageHintsText = document.getElementById('languageHintsText');
             const suggestedSkillsContainer = document.getElementById('suggestedSkillsContainer');
+            let preferredCareerGoal = '';
 
             // User Info Population
             Promise.all([
@@ -174,10 +175,11 @@
                         const initials = dashboardData.user.name.substring(0, 2).toUpperCase();
                         document.querySelector('.avatar').textContent = initials;
                         document.querySelector('.user-info span:first-child').textContent = dashboardData.user.name;
+                        preferredCareerGoal = dashboardData.user.career_goal || '';
                     }
 
                     const careers = (careersData && careersData.careers) ? careersData.careers : [];
-                    populateCareerDropdown(careers);
+                    populateCareerDropdown(careers, preferredCareerGoal);
                 })
                 .catch(console.error);
 
@@ -188,7 +190,7 @@
             let skills = [];
             let careersMap = {};
 
-            function populateCareerDropdown(careers) {
+            function populateCareerDropdown(careers, defaultCareerGoal = '') {
                 if (!targetCareerSelect) return;
 
                 targetCareerSelect.innerHTML = '';
@@ -218,8 +220,25 @@
                     const option = document.createElement('option');
                     option.value = careerName;
                     option.textContent = careerName;
+                    option.setAttribute('data-career', careerName);
                     targetCareerSelect.appendChild(option);
                 });
+
+                const normalizedDefaultCareer = (defaultCareerGoal || '').trim().toLowerCase();
+                if (normalizedDefaultCareer) {
+                    const matchingOption = Array.from(targetCareerSelect.options).find((option) =>
+                        option.value && option.value.toLowerCase() === normalizedDefaultCareer
+                    );
+                    if (matchingOption) {
+                        targetCareerSelect.value = matchingOption.value;
+                        // Ensure suggested skills refresh when we auto-select
+                        try { updateSuggestedSkills(); } catch (e) { /* ignore */ }
+                    }
+                }
+
+                if (!targetCareerSelect.value && targetCareerSelect.options.length > 1) {
+                    targetCareerSelect.selectedIndex = 1;
+                }
 
                 targetCareerSelect.addEventListener('change', updateSuggestedSkills);
                 updateSuggestedSkills();
@@ -235,7 +254,12 @@
             }
 
             function updateSuggestedSkills() {
-                const selectedCareer = targetCareerSelect ? targetCareerSelect.value : '';
+                let selectedCareer = '';
+                if (targetCareerSelect) {
+                    const opt = targetCareerSelect.options[targetCareerSelect.selectedIndex];
+                    selectedCareer = (opt && (opt.getAttribute('data-career') || opt.value)) || '';
+                }
+
                 const careerHints = languageHintsByCareer[selectedCareer] || [];
                 const careerConfig = careersMap[selectedCareer] || {};
                 const requiredSkills = careerConfig.required_skills || [];

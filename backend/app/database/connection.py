@@ -80,6 +80,22 @@ def init_db(mongo_uri):
                 {"career_name": "Cybersecurity Analyst", "required_skills": ["Network Security", "Ethical Hacking", "Linux", "Cryptography", "Risk Assessment", "Python"], "difficulty_level": "Advanced"}
             ])
 
+        if db.courses.count_documents({}) == 0:
+            db.courses.insert_many([
+                {
+                    "title": "Deep Learning Specialization",
+                    "url": "https://www.coursera.org/specializations/deep-learning",
+                    "difficulty_level": "Advanced",
+                    "career_name": "Machine Learning Engineer",
+                },
+                {
+                    "title": "MLOps Fundamentals",
+                    "url": "https://www.coursera.org/learn/mlops-fundamentals",
+                    "difficulty_level": "Intermediate",
+                    "career_name": "Machine Learning Engineer",
+                },
+            ])
+
         logging.info(f"Database ready: {db.name}")
     except Exception as e:
         # Log seeding problems but do not abort initialization; this keeps the

@@ -11,7 +11,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Progress - AI Skill Gap Analyzer</title>
-    <base href="/">
+    <base href="./">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
@@ -258,7 +258,7 @@
                         </div>
                         <div class="metric-info">
                             <h4>Current Streak</h4>
-                            <div class="value">3 Days</div>
+                            <div class="value" id="metricStreak">0 Days</div>
                         </div>
                     </div>
                 </div>
@@ -336,6 +336,7 @@
                         const currentSkillsCount = (u.skills || []).length;
                         const completedSkillsCount = (u.completed_skills || []).length;
                         document.getElementById('metricMastered').textContent = currentSkillsCount + completedSkillsCount;
+                        document.getElementById('metricStreak').textContent = `${u.login_streak_days || 0} Day${(u.login_streak_days || 0) === 1 ? '' : 's'}`;
 
                         let totalModulesCount = 0;
                         if (roadData && roadData.roadmap && roadData.roadmap.generated_steps) {

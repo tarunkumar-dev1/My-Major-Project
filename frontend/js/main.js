@@ -739,7 +739,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         const rs = u.readiness_score || 0;
                         const readinessSpan =
                             document.querySelector(".progress-value");
+                        const readinessLabel =
+                            document.querySelector(".progress-label");
                         if (readinessSpan) readinessSpan.textContent = `${rs}%`;
+                        if (readinessLabel) {
+                            readinessLabel.textContent =
+                                rs >= 80
+                                    ? "On Track"
+                                    : rs >= 60
+                                      ? "Ready"
+                                      : "Building";
+                        }
                         const progressCircle =
                             document.querySelector(".circular-progress");
                         if (progressCircle) {
@@ -1023,13 +1033,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (el) el.textContent = value !== undefined ? value : "0";
                 };
 
-                setText(
-                    "statActiveUsers",
-                    stats.active_users || stats.total_users || 0,
-                );
-                setText("statCareerPaths", stats.career_paths || 0);
-                setText("statLinkedCourses", stats.skill_analyses_run || 0);
-                setText("statAnalysesRun", stats.skill_analyses_run || 0);
+                const activeUsers =
+                    stats.active_users || stats.total_users || 0;
+                const careerPaths = stats.career_paths || 0;
+                const linkedCourses = stats.linked_courses || 0;
+                const analysesRun = stats.skill_analyses_run || 0;
+
+                setText("adminStatActiveUsers", activeUsers);
+                setText("adminStatCareerPaths", careerPaths);
+                setText("adminStatLinkedCourses", linkedCourses);
+                setText("adminStatAnalysesRun", analysesRun);
 
                 // Recent signups table
                 const tbody = document.getElementById("recentSignupsBody");

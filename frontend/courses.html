@@ -1,0 +1,201 @@
+<!--
+    courses.html
+    Course catalog page for the dashboard's "View all" link.
+    Shows the current recommended course options in a dedicated view.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses - AI Skill Gap Analyzer</title>
+    <base href="./">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="ph-fill ph-brain" style="font-size: 28px;"></i>
+                <span>SkillGap AI</span>
+            </div>
+            <nav class="sidebar-nav" style="display: flex; flex-direction: column; height: 100%;">
+                <div style="flex: 1;">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="ph ph-squares-four"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="analyze.html" class="nav-link">
+                        <i class="ph ph-target"></i>
+                        <span>Analyze Skills</span>
+                    </a>
+                    <a href="progress.html" class="nav-link">
+                        <i class="ph ph-chart-line-up"></i>
+                        <span>Progress</span>
+                    </a>
+                    <a href="profile.html" class="nav-link">
+                        <i class="ph ph-user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <a href="admin-login.html" class="nav-link">
+                        <i class="ph ph-shield-check"></i>
+                        <span>Admin</span>
+                    </a>
+                </div>
+                <div style="margin-top: auto;">
+                    <button class="nav-link" id="theme-toggle"
+                        style="width: 100%; border: none; background: transparent; cursor: pointer; text-align: left;">
+                        <i class="ph ph-moon"></i>
+                        <span>Dark Mode</span>
+                    </button>
+                    <a href="index.html" class="nav-link" style="color: #EF4444; margin-top: 0.5rem;">
+                        <i class="ph ph-sign-out"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div>
+                    <div style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">Course catalog</div>
+                    <h1 style="margin-top: 0.25rem; font-size: 1.75rem;">Recommended Courses</h1>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">JD</div>
+                    <div class="user-info" style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; font-size: 0.9rem;">John Doe</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Free Plan</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="dashboard-header">
+                    <div class="welcome-msg">
+                        <h1>Choose the next course that fits your roadmap</h1>
+                        <p style="color: var(--text-secondary);">These are the current recommendations surfaced from the
+                            dashboard.</p>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    <div class="course-card" data-course-title="Deep Learning Specialization"
+                        data-course-url="https://www.coursera.org/specializations/deep-learning"
+                        data-course-note="Strong match for neural network and sequence-model gaps.">
+                        <div class="course-header">
+                            <div class="course-icon"
+                                style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                <i class="ph-fill ph-brain"></i>
+                            </div>
+                            <span class="difficulty-badge diff-advanced">Advanced</span>
+                        </div>
+                        <h4>Deep Learning Specialization</h4>
+                        <p>Master Neural Networks, CNNs, and Sequence Models using TensorFlow.</p>
+                        <button class="btn start-course-btn" data-course-title="Deep Learning Specialization"
+                            data-course-url="https://www.coursera.org/specializations/deep-learning"
+                            data-course-note="Strong match for neural network and sequence-model gaps."
+                            style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); margin-top: auto;">Start
+                            Course</button>
+                    </div>
+
+                    <div class="course-card" data-course-title="MLOps Fundamentals"
+                        data-course-url="https://www.coursera.org/learn/mlops-fundamentals"
+                        data-course-note="Best next step if your roadmap includes deployment, APIs, or production ML.">
+                        <div class="course-header">
+                            <div class="course-icon"
+                                style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: rgba(245, 158, 11, 0.1); color: #F59E0B; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                <i class="ph-fill ph-cube"></i>
+                            </div>
+                            <span class="difficulty-badge diff-intermediate">Intermediate</span>
+                        </div>
+                        <h4>MLOps Fundamentals</h4>
+                        <p>Learn to wrap models in APIs and deploy them to production servers.</p>
+                        <button class="btn start-course-btn" data-course-title="MLOps Fundamentals"
+                            data-course-url="https://www.coursera.org/learn/mlops-fundamentals"
+                            data-course-note="Best next step if your roadmap includes deployment, APIs, or production ML."
+                            style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); margin-top: auto;">Start
+                            Course</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const apiBase = window.SKILLGAP_CONFIG?.API_BASE_URL || 'https://backendaiskillgap.tarunkumar17.me/api';
+
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            fetch(`${apiBase}/student/dashboard`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then((response) => response.ok ? response.json() : null)
+                .then((data) => {
+                    if (!data || !data.user) return;
+                    const user = data.user;
+                    const initials = (user.name || 'User').substring(0, 2).toUpperCase();
+                    const avatar = document.querySelector('.avatar');
+                    const nameLabel = document.querySelector('.user-info span:first-child');
+                    const planLabel = document.querySelector('.user-info span:last-child');
+                    const welcomeTitle = document.querySelector('.welcome-msg h1');
+                    const welcomeCopy = document.querySelector('.welcome-msg p');
+
+                    if (avatar) avatar.textContent = initials;
+                    if (nameLabel) nameLabel.textContent = user.name || 'User';
+                    if (planLabel) planLabel.textContent = user.plan || 'Free Plan';
+                    if (welcomeTitle) welcomeTitle.textContent = `Choose the next course for ${user.career_goal || 'your roadmap'}`;
+                    if (welcomeCopy) {
+                        welcomeCopy.textContent = user.career_goal
+                            ? `Focused on ${user.career_goal}. These recommendations match your current direction.`
+                            : 'These are the current recommendations surfaced from the dashboard.';
+                    }
+                })
+                .catch(console.error);
+
+            document.querySelectorAll('.course-card').forEach((card) => {
+                card.setAttribute('role', 'button');
+                card.setAttribute('tabindex', '0');
+
+                const triggerOpen = () => openRecommendedCourse(card, apiBase);
+
+                card.addEventListener('click', (event) => {
+                    const clickedButton = event.target.closest('.start-course-btn');
+                    if (clickedButton || event.currentTarget === card) {
+                        triggerOpen();
+                    }
+                });
+
+                card.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        triggerOpen();
+                    }
+                });
+            });
+
+            const logoutLink = document.querySelector('a[href="index.html"]');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('last_user_token');
+                    window.location.href = 'index.html';
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

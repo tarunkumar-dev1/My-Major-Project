@@ -94,6 +94,7 @@ def admin_dashboard():
     db = get_db()
     users_col = db['users']
     careers_col = db['careers']
+    courses_col = db['courses']
     login_events_col = db['login_events']
 
     users_cursor = users_col.find({}, {'hashed_password': 0}).sort('created_at', -1)
@@ -129,6 +130,7 @@ def admin_dashboard():
         'total_users': total_users,
         'active_users': active_users,
         'career_paths': careers_col.count_documents({}),
+        'linked_courses': courses_col.count_documents({}),
         'skill_analyses_run': db['roadmaps'].count_documents({}),
         'login_events': login_events_col.count_documents({}),
         'avg_readiness': avg_readiness,

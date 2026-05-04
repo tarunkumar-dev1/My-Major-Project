@@ -7,6 +7,8 @@ All endpoints are protected by the `token_required` decorator which injects
 the `current_user_id` parameter.
 """
 
+import datetime
+
 from flask import Blueprint, request, jsonify
 from app.services.auth_service import token_required, AuthService
 from app.services.analysis_service import AnalysisService
@@ -15,6 +17,44 @@ from app.database.connection import get_db
 from bson.objectid import ObjectId
 
 student_bp = Blueprint('student_bp', __name__)
+
+
+def _calculate_login_streak_days(db, user_id):
+    """Return the user's current consecutive login streak in days."""
+    login_events = db['login_events']
+    cursor = login_events.find(
+        {"user_id": str(user_id)},
+        {"logged_in_at": 1, "_id": 0},
+    ).sort("logged_in_at", -1)
+
+    login_dates = []
+    seen_dates = set()
+    for event in cursor:
+        logged_in_at = event.get("logged_in_at")
+        if not logged_in_at:
+            continue
+        event_date = logged_in_at.date()
+        if event_date in seen_dates:
+            continue
+        seen_dates.add(event_date)
+        login_dates.append(event_date)
+
+    if not login_dates:
+        return 0
+
+    streak = 1
+    current_date = login_dates[0]
+
+    for event_date in login_dates[1:]:
+        if (current_date - event_date).days == 1:
+            streak += 1
+            current_date = event_date
+        elif event_date == current_date:
+            continue
+        else:
+            break
+
+    return streak
 
 
 @student_bp.route('/submit-skills', methods=['POST'])
@@ -60,6 +100,7 @@ def get_dashboard(current_user_id):
         return jsonify({"error": "User not found"}), 404
 
     user['_id'] = str(user['_id'])
+    user['login_streak_days'] = _calculate_login_streak_days(db, current_user_id)
     return jsonify({
         "user": user,
         "message": "Dashboard data fetched successfully"
