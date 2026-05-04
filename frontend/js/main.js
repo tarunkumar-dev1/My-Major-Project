@@ -123,6 +123,33 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialization entry: wire up UI elements and forms.
     console.log("SkillGap Analyzer UI initialized");
 
+    // === ADMIN PAGE CHECK - RUN FIRST ===
+    if (window.location.href.includes("admin.html")) {
+        const adminToken = localStorage.getItem("admin_token");
+        const adminLoginSection = document.getElementById("adminLoginSection");
+        const adminDashboardShell = document.getElementById(
+            "adminDashboardShell",
+        );
+
+        console.log("Admin page detected", { hasToken: !!adminToken });
+
+        if (!adminToken) {
+            // No token - show login form
+            if (adminLoginSection) adminLoginSection.style.display = "block";
+            if (adminDashboardShell) {
+                adminDashboardShell.style.display = "none";
+                adminDashboardShell.style.visibility = "hidden";
+            }
+        } else {
+            // Has token - show dashboard
+            if (adminLoginSection) adminLoginSection.style.display = "none";
+            if (adminDashboardShell) {
+                adminDashboardShell.style.display = "flex";
+                adminDashboardShell.style.visibility = "visible";
+            }
+        }
+    }
+
     const sidebar = document.querySelector(".sidebar");
     const sidebarLogo = document.querySelector(".sidebar-logo");
     const savedSidebarState =
@@ -230,23 +257,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // On the admin dashboard, restrict the visible navigation to the
-        // admin dashboard entry only.
+        // admin dashboard entry only (but keep logout and theme buttons)
         if (adminToken && adminPage) {
             document.querySelectorAll(".sidebar .nav-link").forEach((el) => {
                 const href = el.getAttribute("href") || "";
-                if (href !== "admin.html" && href !== "#") {
+                const isLogout =
+                    el.getAttribute("data-admin-logout") === "true";
+                const isTheme = el.id === "theme-toggle";
+
+                // Keep logout and theme buttons visible
+                if (isLogout || isTheme) {
+                    el.style.display = "";
+                } else if (href !== "admin.html" && href !== "#") {
                     el.style.display = "none";
                 } else if (href === "admin.html") {
                     el.classList.add("active");
+                    el.style.display = "";
                 }
             });
-
-            // Hide theme toggle and logout for admin view (optional clarity)
-            const themeToggle = document.getElementById("theme-toggle");
-            if (themeToggle) themeToggle.style.display = "none";
-            document
-                .querySelectorAll('a[href="index.html"]')
-                .forEach((el) => (el.style.display = "none"));
         }
     })();
 
@@ -1103,34 +1131,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Admin portal protection
+    console.log("Checking if admin page...", window.location.href);
     if (isAdminPage()) {
+        console.log("Admin page detected");
         const adminToken = localStorage.getItem("admin_token");
+        console.log("Admin token:", adminToken ? "exists" : "missing");
+
         const adminLoginSection = document.getElementById("adminLoginSection");
         const adminDashboardShell = document.getElementById(
             "adminDashboardShell",
         );
 
-        // Force visibility settings to ensure proper display
-        if (adminLoginSection) {
-            adminLoginSection.style.display = "none";
-            adminLoginSection.style.visibility = "hidden";
-            adminLoginSection.style.position = "absolute";
-            adminLoginSection.style.zIndex = "-1";
-        }
-        if (adminDashboardShell) {
-            adminDashboardShell.style.display = "none";
-            adminDashboardShell.style.visibility = "hidden";
-            adminDashboardShell.style.position = "absolute";
-            adminDashboardShell.style.zIndex = "-1";
-        }
-
         if (!adminToken) {
-            // Show login form
+            // No token - show login form only
+            console.log("No token, showing login form");
             if (adminLoginSection) {
                 adminLoginSection.style.display = "block";
-                adminLoginSection.style.visibility = "visible";
-                adminLoginSection.style.position = "static";
-                adminLoginSection.style.zIndex = "auto";
             }
             if (adminDashboardShell) {
                 adminDashboardShell.style.display = "none";
@@ -1139,21 +1155,21 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Show dashboard
+        // Has token - show dashboard, hide login
+        console.log("Token exists, showing dashboard");
         if (adminLoginSection) {
             adminLoginSection.style.display = "none";
-            adminLoginSection.style.visibility = "hidden";
         }
         if (adminDashboardShell) {
             adminDashboardShell.style.display = "flex";
             adminDashboardShell.style.visibility = "visible";
-            adminDashboardShell.style.position = "static";
-            adminDashboardShell.style.zIndex = "auto";
         }
 
+        // Attach logout handlers
         const adminLogoutButtons = document.querySelectorAll(
             'a[data-admin-logout="true"], button[data-admin-logout="true"]',
         );
+        console.log("Found logout buttons:", adminLogoutButtons.length);
         adminLogoutButtons.forEach((button) => {
             button.addEventListener("click", (e) => {
                 e.preventDefault();
